@@ -21,6 +21,7 @@
 import { REST, Routes } from "discord.js";
 import "dotenv/config";
 import allCommands from "../commands";
+import logger from "../../lib/logging";
 
 const commands = [];
 
@@ -35,16 +36,16 @@ const rest = new REST().setToken(process.env.TOKEN);
 // and deploy your commands!
 (async () => {
     try {
-        console.log(`Started refreshing ${commands.length} application (/) commands.`);
+        logger.info(`Started refreshing ${commands.length} application (/) commands.`);
 
         // The put method is used to fully refresh all commands in every guild
         const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
             body: commands,
         });
 
-        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+        logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
     } catch (error) {
         // And of course, make sure you catch and log any errors!
-        console.error(error);
+        logger.error(error);
     }
 })();

@@ -21,6 +21,7 @@
 import sqlite3 from "sqlite3";
 import { get, runWithParams } from "../../scripts/sqlite/sqlite_lib";
 import { RemindMeData } from "../../commands/definitions";
+import logger from "../../lib/logging";
 
 export interface Reminder {
     id?: string;
@@ -58,9 +59,9 @@ export const addReminder = async (reminder: Reminder) => {
             ]
         );
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
-        console.log("successfully added new reminder.");
+        logger.info("successfully added new reminder.");
         db.close();
     }
 };
@@ -74,7 +75,7 @@ export const fetchSoonestReminder = async () => {
         );
         return res;
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
         db.close();
     }
@@ -85,9 +86,9 @@ export const deleteReminder = async (reminder: Reminder) => {
     try {
         return await runWithParams(db, "DELETE FROM reminders WHERE id=?", [reminder.id]);
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
-        console.log("successfully deleted reminder: " + reminder.id);
+        logger.info("successfully deleted reminder: " + reminder.id);
         db.close();
     }
 };

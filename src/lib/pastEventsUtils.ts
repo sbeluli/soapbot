@@ -26,6 +26,7 @@ import {
     RepliableInteraction,
 } from "discord.js";
 import { fetchPastEventsByGuild } from "./db/events";
+import logger from "../lib/logging";
 
 const backId = "back";
 const forwardId = "forward";
@@ -81,7 +82,7 @@ export const listPreviousEvents = async (interaction: RepliableInteraction) => {
             });
             return;
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         }
     }
     if (events.length === 0) {
@@ -92,7 +93,7 @@ export const listPreviousEvents = async (interaction: RepliableInteraction) => {
             });
             return;
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         }
     }
     events.forEach((event, _index) => {
@@ -200,13 +201,13 @@ export const listPreviousEvents = async (interaction: RepliableInteraction) => {
                         ],
                     })
                     .catch((err) => {
-                        console.error(err);
+                        logger.error(err);
                     });
             });
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         }
     } catch (err) {
-        console.error(err);
+        logger.error(err);
     }
 };

@@ -29,6 +29,7 @@ import {
     GuildScheduledEventStatus,
     PartialGuildScheduledEvent,
 } from "discord.js";
+import logger from "../../lib/logging";
 
 export interface DiscordEvent {
     id: string;
@@ -73,7 +74,7 @@ export const fetchEvent = async (eventId: string): Promise<DiscordEvent> => {
         );
         return res;
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
         db.close();
     }
@@ -89,7 +90,7 @@ export const fetchCurrentEventsByGuild = async (guildId: string) => {
         );
         return res;
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
         db.close();
     }
@@ -105,7 +106,7 @@ export const fetchPastEventsByGuild = async (guildId: string) => {
         );
         return res;
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
         db.close();
     }
@@ -131,9 +132,9 @@ export const addNewEvent = async (event: DiscordEvent) => {
             ]
         );
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
-        console.log("successfully added new event: " + event.name);
+        logger.info("successfully added new event: " + event.name);
         db.close();
     }
 };
@@ -155,9 +156,9 @@ export const updateToPastEvent = async (event: DiscordEvent) => {
             ]
         );
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
-        console.log("successfully updated to past event: " + event.name);
+        logger.info("successfully updated to past event: " + event.name);
         db.close();
     }
 };
@@ -178,9 +179,9 @@ export const update = async (event: DiscordEvent) => {
             ]
         );
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
-        console.log("successfully updated event: " + event.name);
+        logger.info("successfully updated event: " + event.name);
         db.close();
     }
 };
@@ -197,9 +198,9 @@ export const updateSubscriberNum = async (eventId: string, increment: boolean) =
             event.id,
         ]);
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
-        console.log("successfully updated subscriber num");
+        logger.info("successfully updated subscriber num");
         db.close();
     }
 };
@@ -215,9 +216,9 @@ export const updateSubscriberNumTotal = async (
             eventId,
         ]);
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
-        console.log("successfully updated total subscriber num");
+        logger.info("successfully updated total subscriber num");
         db.close();
     }
 };
