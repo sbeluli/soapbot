@@ -25,6 +25,7 @@ import { EventDetails } from "../..";
 import { runWithParams } from "./sqlite_lib";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import logger from "../../lib/logging";
 
 const fileNames = [
     process.env.SECRET_1 + ".json",
@@ -42,12 +43,12 @@ const __dirname = dirname(__filename);
 const readFile = (file: string) => {
     // Load Data
     if (!fs.existsSync(file)) {
-        console.warn("Event secret file doesnt exist: " + file);
+        logger.warn("Event secret file doesnt exist: " + file);
         const content = JSON.stringify([]);
         try {
             fs.writeFileSync(file, content, "utf8");
         } catch (err) {
-            console.error(err);
+            logger.error(err);
         }
     }
     try {
@@ -57,7 +58,7 @@ const readFile = (file: string) => {
 
         return previousEvents;
     } catch (err) {
-        console.error(err);
+        logger.error(err);
         return [];
     }
 };
@@ -65,7 +66,7 @@ const readFile = (file: string) => {
 const migrateSecrets = async () => {
     const db = new sqlite3.Database("soapbot.db");
     let counter = 0;
-    console.log(fileNames);
+    logger.info(fileNames);
 
     for (const guild in fileNames) {
         const file = __dirname + "/" + fileNames[guild];
@@ -101,12 +102,12 @@ const migrateSecrets = async () => {
                 );
                 counter++;
             } catch (error) {
-                console.log(error);
+                logger.error(error);
             }
         }
     }
 
-    console.log("Secret files imported to db.");
+    logger.info("Secret files imported to db.");
     db.close();
 };
 

@@ -24,6 +24,7 @@ import { eventsRolesInfo } from "../..";
 import { runWithParams } from "./sqlite_lib";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import logger from "../../lib/logging";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -33,7 +34,7 @@ const file = __dirname + "/" + fileName;
 const readFile = () => {
     // Load Data
     if (!fs.existsSync(file)) {
-        console.warn("File doesnt exist");
+        logger.warn("File doesnt exist");
         const content = JSON.stringify({});
         fs.writeFileSync(file, content, "utf8");
     }
@@ -58,11 +59,11 @@ const migrateSaved = async () => {
                 [eventId, guild, role, name, description, scheduledStartAt, false]
             );
         } catch (error) {
-            console.log(error);
+            logger.error(error);
         }
     }
 
-    console.log("Saved file imported to db.");
+    logger.info("Saved file imported to db.");
     db.close();
 };
 

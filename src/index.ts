@@ -54,6 +54,7 @@ import {
     fetchSoonestReminder,
     formatReminder,
 } from "./lib/db/reminders";
+import logger from "./lib/logging";
 
 export interface eventsRolesInfo {
     // for lookup
@@ -85,7 +86,7 @@ let reminderInterval: NodeJS.Timeout;
 
 const updateEventsRoles = async () => {
     isReady = false;
-    console.log("start initial routine");
+    logger.info("start initial routine");
     // checks events in registered guilds and sees if they are in db
     // adds them to db if not
     // also checks subscribers and adds/removes roles from users
@@ -111,16 +112,16 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
                     const eventDB = await fetchEvent(id);
                     if (!eventDB) {
                         // make role if it doesn't exist
-                        console.log("role doesnt exist for " + event.name + "; creating");
+                        logger.info("role doesnt exist for " + event.name + "; creating");
                         role = await onCreateEvent(event);
                     } else {
-                        console.log("role exists for " + event.name);
+                        logger.info("role exists for " + event.name);
                         role = eventDB.role_id;
                     }
 
                     if (!role) {
                         // exit if role null
-                        console.log("role null; continue to next event");
+                        logger.info("role null; continue to next event");
                         continue;
                     }
 
@@ -144,12 +145,12 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
                                     });
 
                                     if (res) {
-                                        console.log(
+                                        logger.info(
                                             `added missing role (${event.name}) to ${user.user.username}`
                                         );
                                     }
                                 } catch (err) {
-                                    console.error(err);
+                                    logger.error(err);
                                 }
                             }
                         }
@@ -163,27 +164,27 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
                                         user: id,
                                     });
                                     if (res) {
-                                        console.log(
+                                        logger.info(
                                             `removed incorrect role (${event.name}) from ${member.user.username}`
                                         );
                                     }
                                 } catch (err) {
-                                    console.error(err);
+                                    logger.error(err);
                                 }
                             }
                         }
                         updateSubscriberNumTotal(id, subscribers.size);
                     } catch (err) {
-                        console.error(err);
+                        logger.error(err);
                     }
                 }
             } catch (err) {
-                console.error(err);
+                logger.error(err);
             }
         }
         return guilds;
     } catch (err) {
-        console.error(err);
+        logger.error(err);
     }
 };
 
@@ -200,9 +201,9 @@ const deleteMissedEvents = async (): Promise<void> => {
                         try {
                             await guild.roles.delete(event.role_id);
                         } catch (err) {
-                            console.error(err);
+                            logger.error(err);
                         }
-                        console.log("old role deleted: " + event.role_id);
+                        logger.info("old role deleted: " + event.role_id);
                         updateToPastEvent(event);
                     } else {
                         guild.scheduledEvents
@@ -213,21 +214,21 @@ const deleteMissedEvents = async (): Promise<void> => {
                                     try {
                                         await guild.roles.delete(event.role_id);
                                     } catch (err) {
-                                        console.error(err);
+                                        logger.error(err);
                                     }
-                                    console.log("old role deleted: " + event.role_id);
+                                    logger.info("old role deleted: " + event.role_id);
                                     updateToPastEvent(event);
                                 }
                             })
-                            .catch(console.error);
+                            .catch(logger.error);
                     }
                 }
             } catch (err) {
-                console.error(err);
+                logger.error(err);
             }
         }
     } catch (err) {
-        console.error(err);
+        logger.error(err);
     }
 };
 
@@ -243,7 +244,7 @@ const onCreateEvent = async (
             reason: "for event",
         })
         .then((role) => {
-            console.log("role created: " + role.name);
+            logger.info("role created: " + role.name);
             addNewEvent(formatEvent(guildScheduledEvent, role.id));
             // add role to creator
             guildScheduledEvent.guild.members
@@ -252,15 +253,15 @@ const onCreateEvent = async (
                     user: guildScheduledEvent.creatorId,
                 })
                 .then(() =>
-                    console.log(
+                    logger.info(
                         `added role (${guildScheduledEvent.name}) to creator: ${guildScheduledEvent.creatorId}`
                     )
                 )
-                .catch(console.error);
+                .catch(logger.error);
             return role.id;
         })
         .catch((err): Promise<string> => {
-            console.error(err);
+            logger.error(err);
             return null;
         });
 };
@@ -289,13 +290,13 @@ const checkReminders = async () => {
                                         // so clear the interval and start it again
                                         startRemindersCheck();
                                     })
-                                    .catch(console.error);
+                                    .catch(logger.error);
                             })
-                            .catch(console.error);
+                            .catch(logger.error);
                     })
-                    .catch(console.error);
+                    .catch(logger.error);
             })
-            .catch(console.error);
+            .catch(logger.error);
     }
 };
 
@@ -346,7 +347,7 @@ for (const command of allCommands) {
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
 // It makes some properties non-nullable.
 client.once(Events.ClientReady, (readyClient) => {
-    console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+    logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
     subscribe();
     printGuilds();
     startRemindersCheck();
@@ -364,16 +365,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 interaction.commandName
             );
             if (!command) {
-                console.error(
-                    `No command matching ${interaction.commandName} was found.`
-                );
+                logger.error(`No command matching ${interaction.commandName} was found.`);
                 return;
             }
 
             try {
                 await command.execute(interaction);
             } catch (err) {
-                console.error(err);
+                logger.error(err);
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({
                         content: "There was an error while executing this command!",
@@ -400,7 +399,7 @@ client.on(
     ): Promise<void> => {
         const createEvent = () => {
             if (isReady) {
-                console.log("event created: " + guildScheduledEvent.name);
+                logger.info("event created: " + guildScheduledEvent.name);
                 onCreateEvent(guildScheduledEvent);
             } else {
                 setTimeout(createEvent, 5000);
@@ -419,20 +418,20 @@ client.on(
     ): Promise<void> => {
         const deleteEvent = () => {
             if (isReady) {
-                console.log("event deleted: " + guildScheduledEvent.name);
+                logger.info("event deleted: " + guildScheduledEvent.name);
                 fetchEvent(guildScheduledEvent.id).then((event) => {
                     if (event) {
                         guildScheduledEvent.guild.roles
                             .delete(event.role_id)
                             .then(() => {
-                                console.log("role deleted for " + event.name);
+                                logger.info("role deleted for " + event.name);
                                 updateToPastEvent(
                                     formatEvent(guildScheduledEvent, event.role_id)
                                 );
                             })
-                            .catch(console.error);
+                            .catch(logger.error);
                     } else {
-                        console.warn(
+                        logger.warn(
                             "couldnt find event! weirdge... id: " + guildScheduledEvent.id
                         );
                     }
@@ -461,19 +460,19 @@ client.on(
                             newGuildScheduledEvent.status === 3 ||
                             newGuildScheduledEvent.status === 4
                         ) {
-                            console.log("event canceled: " + newGuildScheduledEvent.name);
+                            logger.info("event canceled: " + newGuildScheduledEvent.name);
                             // complete or canceled
                             newGuildScheduledEvent.guild.roles
                                 .delete(event.role_id)
                                 .then(() => {
-                                    console.log(
+                                    logger.info(
                                         "role deleted for " + newGuildScheduledEvent.name
                                     );
                                     updateToPastEvent(
                                         formatEvent(newGuildScheduledEvent, event.role_id)
                                     );
                                 })
-                                .catch(console.error);
+                                .catch(logger.error);
                         } else if (
                             oldGuildScheduledEvent.name !== newGuildScheduledEvent.name
                         ) {
@@ -482,17 +481,17 @@ client.on(
                                     name: newGuildScheduledEvent.name,
                                 })
                                 .then(() => {
-                                    console.log(
+                                    logger.info(
                                         "role edited for " + newGuildScheduledEvent.name
                                     );
                                     update(
                                         formatEvent(newGuildScheduledEvent, event.role_id)
                                     );
                                 })
-                                .catch(console.error);
+                                .catch(logger.error);
                         }
                     } else {
-                        console.warn(
+                        logger.warn(
                             "couldnt find event! weirdge... id: " +
                                 newGuildScheduledEvent.id
                         );
@@ -524,7 +523,7 @@ client.on(
                                 user: user,
                             })
                             .then(() => {
-                                console.log(
+                                logger.info(
                                     "user subscribed: " +
                                         user.username +
                                         " - " +
@@ -532,7 +531,7 @@ client.on(
                                 );
                                 updateSubscriberNum(guildScheduledEvent.id, true);
                             })
-                            .catch(console.error);
+                            .catch(logger.error);
                     }
                 });
             } else {
@@ -561,7 +560,7 @@ client.on(
                                 user: user,
                             })
                             .then(() => {
-                                console.log(
+                                logger.info(
                                     "user unsubscribed: " +
                                         user.username +
                                         " - " +
@@ -569,7 +568,7 @@ client.on(
                                 );
                                 updateSubscriberNum(guildScheduledEvent.id, false);
                             })
-                            .catch(console.error);
+                            .catch(logger.error);
                     }
                 });
             } else {

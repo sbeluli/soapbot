@@ -20,6 +20,7 @@
 
 import sqlite3 from "sqlite3";
 import { execute } from "./sqlite_lib";
+import logger from "../../lib/logging";
 
 const createDB = async () => {
     const db = new sqlite3.Database("soapbot.db");
@@ -36,9 +37,9 @@ const createDB = async () => {
                 ")"
         );
     } catch (error) {
-        console.log(error);
+        logger.error(error);
     } finally {
-        console.log("Table created successfully!");
+        logger.info("Table 'reminders' created successfully!");
         db.close();
     }
 };
