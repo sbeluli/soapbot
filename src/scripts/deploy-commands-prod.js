@@ -36,16 +36,20 @@ const rest = new REST().setToken(process.env.TOKEN);
 // and deploy your commands!
 (async () => {
     try {
-        logger.info(`Started refreshing ${commands.length} application (/) commands.`);
+        logger.info(`Started refreshing ${commands.length} application (/) commands.`, {
+            file: "deploy-commands-prod.js",
+        });
 
         // The put method is used to fully refresh all commands in every guild
         const data = await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
             body: commands,
         });
 
-        logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
+        logger.info(`Successfully reloaded ${data.length} application (/) commands.`, {
+            file: "deploy-commands-prod.js",
+        });
     } catch (error) {
         // And of course, make sure you catch and log any errors!
-        logger.error(error);
+        logger.error(error, { file: "deploy-commands-prod.js" });
     }
 })();

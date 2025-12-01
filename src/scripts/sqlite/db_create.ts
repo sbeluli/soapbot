@@ -42,9 +42,9 @@ const createDB = async () => {
                 ")"
         );
     } catch (error) {
-        logger.error(error);
+        logger.error(error as string, { file: "db_create.ts" });
     } finally {
-        logger.info("Table 'events' created successfully!");
+        logger.info("Table 'events' created successfully!", { file: "db_create.ts" });
         db.close();
     }
 };

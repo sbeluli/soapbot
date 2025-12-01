@@ -82,7 +82,9 @@ export const listPreviousEvents = async (interaction: RepliableInteraction) => {
             });
             return;
         } catch (err) {
-            logger.error(err);
+            logger.error(err as string, {
+                event: "listPreviousEvents",
+            });
         }
     }
     if (events.length === 0) {
@@ -93,7 +95,9 @@ export const listPreviousEvents = async (interaction: RepliableInteraction) => {
             });
             return;
         } catch (err) {
-            logger.error(err);
+            logger.error(err as string, {
+                event: "listPreviousEvents",
+            });
         }
     }
     events.forEach((event, _index) => {
@@ -201,13 +205,19 @@ export const listPreviousEvents = async (interaction: RepliableInteraction) => {
                         ],
                     })
                     .catch((err) => {
-                        logger.error(err);
+                        logger.error(err as string, {
+                            event: "listPreviousEvents",
+                        });
                     });
             });
         } catch (err) {
-            logger.error(err);
+            logger.error(err as string, {
+                event: "listPreviousEvents",
+            });
         }
     } catch (err) {
-        logger.error(err);
+        logger.error(err as string, {
+            event: "listPreviousEvents",
+        });
     }
 };

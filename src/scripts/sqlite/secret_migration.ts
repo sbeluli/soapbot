@@ -43,12 +43,14 @@ const __dirname = dirname(__filename);
 const readFile = (file: string) => {
     // Load Data
     if (!fs.existsSync(file)) {
-        logger.warn("Event secret file doesnt exist: " + file);
+        logger.warn("Event secret file doesnt exist: " + file, {
+            file: "secret_migration.ts",
+        });
         const content = JSON.stringify([]);
         try {
             fs.writeFileSync(file, content, "utf8");
         } catch (err) {
-            logger.error(err);
+            logger.error(err as string, { file: "secret_migration.ts" });
         }
     }
     try {
@@ -58,7 +60,7 @@ const readFile = (file: string) => {
 
         return previousEvents;
     } catch (err) {
-        logger.error(err);
+        logger.error(err as string, { file: "secret_migration.ts" });
         return [];
     }
 };
@@ -102,12 +104,12 @@ const migrateSecrets = async () => {
                 );
                 counter++;
             } catch (error) {
-                logger.error(error);
+                logger.error(error as string, { file: "secret_migration.ts" });
             }
         }
     }
 
-    logger.info("Secret files imported to db.");
+    logger.info("Secret files imported to db.", { file: "secret_migration.ts" });
     db.close();
 };
 

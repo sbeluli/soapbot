@@ -59,9 +59,23 @@ export const addReminder = async (reminder: Reminder) => {
             ]
         );
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "addReminder",
+            guildId: reminder.guild_id,
+            userId: reminder.user_id,
+            channelId: reminder.channel_id,
+            reminder: reminder.message,
+            date: reminder.date,
+        });
     } finally {
-        logger.info("successfully added new reminder.");
+        logger.dbInfo("successfully added new reminder.", {
+            event: "addReminder",
+            guildId: reminder.guild_id,
+            userId: reminder.user_id,
+            channelId: reminder.channel_id,
+            reminder: reminder.message,
+            date: reminder.date,
+        });
         db.close();
     }
 };
@@ -75,7 +89,9 @@ export const fetchSoonestReminder = async () => {
         );
         return res;
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "fetchSoonestReminder",
+        });
     } finally {
         db.close();
     }
@@ -86,9 +102,25 @@ export const deleteReminder = async (reminder: Reminder) => {
     try {
         return await runWithParams(db, "DELETE FROM reminders WHERE id=?", [reminder.id]);
     } catch (error) {
-        logger.error(error);
+        logger.error(error as string, {
+            event: "addReminder",
+            reminderId: reminder.id,
+            guildId: reminder.guild_id,
+            userId: reminder.user_id,
+            channelId: reminder.channel_id,
+            reminder: reminder.message,
+            date: reminder.date,
+        });
     } finally {
-        logger.info("successfully deleted reminder: " + reminder.id);
+        logger.info("successfully deleted reminder: " + reminder.id, {
+            event: "addReminder",
+            reminderId: reminder.id,
+            guildId: reminder.guild_id,
+            userId: reminder.user_id,
+            channelId: reminder.channel_id,
+            reminder: reminder.message,
+            date: reminder.date,
+        });
         db.close();
     }
 };
