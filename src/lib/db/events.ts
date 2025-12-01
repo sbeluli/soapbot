@@ -146,7 +146,7 @@ export const addNewEvent = async (event: DiscordEvent) => {
             eventId: event.id,
         });
     } finally {
-        logger.dbInfo("successfully added new event: " + event.name, {
+        logger.dbVerbose("successfully added new event: " + event.name, {
             event: "addNewEvent",
             eventId: event.id,
         });
@@ -176,7 +176,7 @@ export const updateToPastEvent = async (event: DiscordEvent) => {
             eventId: event.id,
         });
     } finally {
-        logger.dbInfo("successfully updated to past event: " + event.name, {
+        logger.dbVerbose("successfully updated to past event: " + event.name, {
             event: "updateToPastEvent",
             eventId: event.id,
         });
@@ -205,7 +205,7 @@ export const update = async (event: DiscordEvent) => {
             eventId: event.id,
         });
     } finally {
-        logger.dbInfo("successfully updated event: " + event.name, {
+        logger.dbVerbose("successfully updated event: " + event.name, {
             event: "update",
             eventId: event.id,
         });
@@ -231,7 +231,7 @@ export const updateSubscriberNum = async (eventId: string, increment: boolean) =
             increment: increment,
         });
     } finally {
-        logger.dbInfo("successfully updated subscriber num", {
+        logger.dbVerbose("successfully updated subscriber num", {
             event: "updateSubscriberNum",
             eventId: eventId,
             increment: increment,
@@ -257,7 +257,7 @@ export const updateSubscriberNumTotal = async (
             subscriberNum: subscriberNum,
         });
     } finally {
-        logger.dbInfo("successfully updated total subscriber num", {
+        logger.dbVerbose("successfully updated total subscriber num", {
             event: "updateSubscriberNumTotal",
             eventId: eventId,
             subscriberNum: subscriberNum,

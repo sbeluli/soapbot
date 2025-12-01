@@ -91,14 +91,14 @@ let reminderInterval: NodeJS.Timeout;
 
 const updateEventsRoles = async () => {
     isReady = false;
-    logger.info("start initial routine", { event: "updateEventsRoles" });
+    logger.verbose("start initial routine", { event: "updateEventsRoles" });
     // checks events in registered guilds and sees if they are in db
     // adds them to db if not
     // updates db with updated event details
     // also checks subscribers and adds/removes roles from users
     addMissedEvents().then(() => {
         isReady = true; // we can set ready after this because deleted events wont effect incoming event changes
-        logger.info("ready", { event: "updateEventsRoles" });
+        logger.verbose("ready", { event: "updateEventsRoles" });
     });
     // checks events in db and sees if they exist in discord
     // updates them to past events if not
@@ -127,7 +127,7 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
                         );
                         role = await onCreateEvent(event);
                     } else {
-                        logger.info("role exists for " + event.name, {
+                        logger.verbose("role exists for " + event.name, {
                             event: "addMissedEvents",
                             eventId: event.id,
                         });
@@ -161,7 +161,7 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
 
                     if (!role) {
                         // exit if role null
-                        logger.info("role null; continue to next event", {
+                        logger.warn("role null; continue to next event", {
                             event: "addMissedEvents",
                             eventId: event.id,
                             roleId: role,
@@ -478,9 +478,9 @@ const subscribe = () => {
 
 const printGuilds = () => {
     client.guilds.fetch().then((guilds) => {
-        logger.info("Guilds:", { event: "printGuilds" });
+        logger.silly("Guilds:", { event: "printGuilds" });
         guilds.forEach((guild) => {
-            logger.info(guild.name + ": " + guild.id, { event: "printGuilds" });
+            logger.silly(guild.name + ": " + guild.id, { event: "printGuilds" });
         });
     });
 };
@@ -568,6 +568,10 @@ client.on(
     ): Promise<void> => {
         const createEvent = async () => {
             if (isReady) {
+                logger.debug("gse create event: " + guildScheduledEvent.name, {
+                    event: "GuildScheduledEventCreate",
+                    eventId: guildScheduledEvent.id,
+                });
                 // check if event exists
                 // if it was creating during the initial routine, we might already have saved it
                 const event = await fetchEvent(guildScheduledEvent.id);
@@ -586,6 +590,7 @@ client.on(
                     });
                 }
             } else {
+                logger.debug("not ready", { event: "GuildScheduledEventCreate" });
                 setTimeout(createEvent, 5000);
             }
         };
@@ -602,7 +607,7 @@ client.on(
     ): Promise<void> => {
         const deleteEvent = () => {
             if (isReady) {
-                logger.info("event deleted: " + guildScheduledEvent.name, {
+                logger.debug("gse delete event: " + guildScheduledEvent.name, {
                     event: "GuildScheduledEventDelete",
                     eventId: guildScheduledEvent.id,
                 });
@@ -646,6 +651,7 @@ client.on(
                     }
                 });
             } else {
+                logger.debug("not ready", { event: "GuildScheduledEventDelete" });
                 setTimeout(deleteEvent, 5000);
             }
         };
@@ -663,6 +669,10 @@ client.on(
     ): Promise<void> => {
         const updateEvent = () => {
             if (isReady) {
+                logger.debug("gse update event: " + oldGuildScheduledEvent.name, {
+                    event: "GuildScheduledEventUpdate",
+                    eventId: oldGuildScheduledEvent.id,
+                });
                 fetchEvent(newGuildScheduledEvent.id).then((event) => {
                     if (event) {
                         if (
@@ -719,35 +729,53 @@ client.on(
                         } else if (
                             oldGuildScheduledEvent.name !== newGuildScheduledEvent.name
                         ) {
-                            // update role name to match event name
-                            newGuildScheduledEvent.guild.roles
-                                .edit(event.role_id, {
-                                    name: newGuildScheduledEvent.name,
-                                })
-                                .then(() => {
-                                    logger.info(
-                                        "role edited for " + newGuildScheduledEvent.name,
-                                        {
+                            if (event.name !== newGuildScheduledEvent.name) {
+                                // update role name to match event name
+                                newGuildScheduledEvent.guild.roles
+                                    .edit(event.role_id, {
+                                        name: newGuildScheduledEvent.name,
+                                    })
+                                    .then(() => {
+                                        logger.info(
+                                            "role edited for " +
+                                                newGuildScheduledEvent.name,
+                                            {
+                                                event: "GuildScheduledEventUpdate",
+                                                eventId: newGuildScheduledEvent.id,
+                                                eventName: newGuildScheduledEvent.name,
+                                                roleId: event.role_id,
+                                            }
+                                        );
+                                        update(
+                                            formatEvent(
+                                                newGuildScheduledEvent,
+                                                event.role_id
+                                            )
+                                        );
+                                    })
+                                    .catch((reason) =>
+                                        logger.error(reason, {
                                             event: "GuildScheduledEventUpdate",
                                             eventId: newGuildScheduledEvent.id,
                                             eventName: newGuildScheduledEvent.name,
                                             roleId: event.role_id,
-                                        }
+                                        })
                                     );
-                                    update(
-                                        formatEvent(newGuildScheduledEvent, event.role_id)
-                                    );
-                                })
-                                .catch((reason) =>
-                                    logger.error(reason, {
+                                // update event details
+                                update(
+                                    formatEvent(newGuildScheduledEvent, event.role_id)
+                                );
+                            } else {
+                                logger.warn(
+                                    "name already updated for " +
+                                        newGuildScheduledEvent.name,
+                                    {
                                         event: "GuildScheduledEventUpdate",
                                         eventId: newGuildScheduledEvent.id,
-                                        eventName: newGuildScheduledEvent.name,
                                         roleId: event.role_id,
-                                    })
+                                    }
                                 );
-                            // update event details
-                            update(formatEvent(newGuildScheduledEvent, event.role_id));
+                            }
                         } else {
                             // update event details
                             update(formatEvent(newGuildScheduledEvent, event.role_id));
@@ -765,6 +793,7 @@ client.on(
                     }
                 });
             } else {
+                logger.debug("not ready", { event: "GuildScheduledEventUpdate" });
                 setTimeout(updateEvent, 5000);
             }
         };
@@ -772,6 +801,11 @@ client.on(
     }
 );
 
+// disclaimer:
+// discord now runs this after creating an event, which they didnt before lol
+// but it doesn't really matter, bc at this point the event isnt created yet, so this code will warn you of that and then do nothing.
+// we add the role to the creator when creating the event anyway so it's fine.
+// don't worry about the warning message.
 client.on(
     Events.GuildScheduledEventUserAdd,
     (
@@ -782,6 +816,10 @@ client.on(
     ): void => {
         const userAdd = () => {
             if (isReady) {
+                logger.debug("user add event: " + guildScheduledEvent.name, {
+                    event: "GuildScheduledEventUserAdd",
+                    eventId: guildScheduledEvent.id,
+                });
                 fetchEvent(guildScheduledEvent.id).then(async (event) => {
                     if (event) {
                         try {
@@ -795,34 +833,21 @@ client.on(
                                         role: event.role_id,
                                         user: user,
                                     })
-                                    .then(
-                                        () => {
-                                            logger.info(
-                                                "user subscribed: " +
-                                                    user.username +
-                                                    " - " +
-                                                    guildScheduledEvent.name,
-                                                {
-                                                    event: "GuildScheduledEventUserAdd",
-                                                    guildScheduledEventId:
-                                                        guildScheduledEvent.id,
-                                                    userId: user.id,
-                                                }
-                                            );
-                                            updateSubscriberNum(
-                                                guildScheduledEvent.id,
-                                                true
-                                            );
-                                        },
-                                        (reason: any) => {
-                                            logger.warn(reason, {
+                                    .then(() => {
+                                        logger.info(
+                                            "user subscribed: " +
+                                                user.username +
+                                                " - " +
+                                                guildScheduledEvent.name,
+                                            {
                                                 event: "GuildScheduledEventUserAdd",
                                                 guildScheduledEventId:
                                                     guildScheduledEvent.id,
                                                 userId: user.id,
-                                            });
-                                        }
-                                    )
+                                            }
+                                        );
+                                        updateSubscriberNum(guildScheduledEvent.id, true);
+                                    })
                                     .catch((reason) =>
                                         logger.error(reason, {
                                             event: "GuildScheduledEventUserAdd",
@@ -830,6 +855,15 @@ client.on(
                                             userId: user.id,
                                         })
                                     );
+                            } else {
+                                logger.warn(
+                                    `user already added (${user.username}). skipping`,
+                                    {
+                                        event: "GuildScheduledEventUserAdd",
+                                        guildScheduledEventId: guildScheduledEvent.id,
+                                        userId: user.id,
+                                    }
+                                );
                             }
                         } catch (err) {
                             logger.error(err as string, {
@@ -851,6 +885,7 @@ client.on(
                     }
                 });
             } else {
+                logger.debug("not ready", { event: "GuildScheduledEventUserAdd" });
                 setTimeout(userAdd, 5000);
             }
         };
@@ -868,6 +903,10 @@ client.on(
     ): void => {
         const userRemove = () => {
             if (isReady) {
+                logger.debug("user remove event: " + guildScheduledEvent.name, {
+                    event: "GuildScheduledEventUserRemove",
+                    eventId: guildScheduledEvent.id,
+                });
                 fetchEvent(guildScheduledEvent.id).then(async (event) => {
                     if (event) {
                         try {
@@ -881,34 +920,24 @@ client.on(
                                         role: event.role_id,
                                         user: user,
                                     })
-                                    .then(
-                                        () => {
-                                            logger.info(
-                                                "user unsubscribed: " +
-                                                    user.username +
-                                                    " - " +
-                                                    guildScheduledEvent.name,
-                                                {
-                                                    event: "GuildScheduledEventUserRemove",
-                                                    guildScheduledEventId:
-                                                        guildScheduledEvent.id,
-                                                    userId: user.id,
-                                                }
-                                            );
-                                            updateSubscriberNum(
-                                                guildScheduledEvent.id,
-                                                false
-                                            );
-                                        },
-                                        (reason: any) => {
-                                            logger.warn(reason, {
+                                    .then(() => {
+                                        logger.info(
+                                            "user unsubscribed: " +
+                                                user.username +
+                                                " - " +
+                                                guildScheduledEvent.name,
+                                            {
                                                 event: "GuildScheduledEventUserRemove",
                                                 guildScheduledEventId:
                                                     guildScheduledEvent.id,
                                                 userId: user.id,
-                                            });
-                                        }
-                                    )
+                                            }
+                                        );
+                                        updateSubscriberNum(
+                                            guildScheduledEvent.id,
+                                            false
+                                        );
+                                    })
                                     .catch((reason) =>
                                         logger.error(reason, {
                                             event: "GuildScheduledEventUserRemove",
@@ -916,6 +945,15 @@ client.on(
                                             userId: user.id,
                                         })
                                     );
+                            } else {
+                                logger.warn(
+                                    `user already removed (${user.username}). skipping`,
+                                    {
+                                        event: "GuildScheduledEventUserRemove",
+                                        guildScheduledEventId: guildScheduledEvent.id,
+                                        userId: user.id,
+                                    }
+                                );
                             }
                         } catch (err) {
                             logger.error(err as string, {
@@ -937,6 +975,7 @@ client.on(
                     }
                 });
             } else {
+                logger.debug("not ready", { event: "GuildScheduledEventUserRemove" });
                 setTimeout(userRemove, 5000);
             }
         };

@@ -25,17 +25,17 @@ const myCustomLevels: {
     },
     colors: {
         error: "red",
-        dbError: "redBG white",
+        dbError: "red blackBG",
         warn: "yellow",
-        dbWarn: "yellowBG black",
+        dbWarn: "yellow blackBG",
         info: "green",
-        dbInfo: "greenBG white",
+        dbInfo: "green blackBG",
         verbose: "blue",
-        dbVerbose: "blueBG white",
+        dbVerbose: "blue blackBG",
         debug: "magenta",
-        dbDebug: "magentaBG white",
+        dbDebug: "magenta blackBG",
         silly: "grey",
-        dbSilly: "greyBG black",
+        dbSilly: "grey blackBG",
     },
 };
 
@@ -52,11 +52,12 @@ const consoleTransport = new winston.transports.Console({
         align(),
         printf(
             (info) =>
-                `[${info.timestamp}] ${info.level} (${info.event || info.file}): ${
+                `[${info.timestamp}] ${info.level}\t(${info.event || info.file}): ${
                     info.message
                 }`
         )
     ),
+    level: "silly",
 });
 const fileTransport = new winston.transports.File({
     format: combine(
@@ -71,6 +72,7 @@ const fileTransport = new winston.transports.File({
     maxFiles: 5,
     tailable: true,
     lazy: true,
+    level: "verbose",
 });
 
 const logger = winston.createLogger({
