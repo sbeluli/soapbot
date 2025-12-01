@@ -27,6 +27,7 @@ import {
 } from "discord.js";
 import { Command, RemindMeData } from "../definitions";
 import pubsub from "pubsub-js";
+import logger from "../../lib/logging";
 
 const numToString = new Map<number, string>([
     [60000, "minute(s)"],
@@ -130,23 +131,50 @@ const RemindMe: Command = {
                     .has(["0x0000000000000800", "0x0000000000000400"]) // send messages, view channel
             ) {
                 pubsub.publish("remindme", data);
-                await interaction.reply({
-                    embeds: [page],
-                    ephemeral: ephemeral,
-                });
+                await interaction
+                    .reply({
+                        embeds: [page],
+                        ephemeral: ephemeral,
+                    })
+                    .catch((reason) =>
+                        logger.error(reason, {
+                            file: "RemindMe.ts",
+                            interactionId: interaction.id,
+                            command: interaction.commandName,
+                            guildId: interaction.guildId,
+                        })
+                    );
             } else {
-                await interaction.reply({
-                    content: "I don't have access to that channel. Sorry :(",
-                    ephemeral: true,
-                });
+                await interaction
+                    .reply({
+                        content: "I don't have access to that channel. Sorry :(",
+                        ephemeral: true,
+                    })
+                    .catch((reason) =>
+                        logger.error(reason, {
+                            file: "RemindMe.ts",
+                            interactionId: interaction.id,
+                            command: interaction.commandName,
+                            guildId: interaction.guildId,
+                        })
+                    );
                 return;
             }
         } else {
             pubsub.publish("remindme", data);
-            await interaction.reply({
-                embeds: [page],
-                ephemeral: ephemeral,
-            });
+            await interaction
+                .reply({
+                    embeds: [page],
+                    ephemeral: ephemeral,
+                })
+                .catch((reason) =>
+                    logger.error(reason, {
+                        file: "RemindMe.ts",
+                        interactionId: interaction.id,
+                        command: interaction.commandName,
+                        guildId: interaction.guildId,
+                    })
+                );
         }
     },
 };

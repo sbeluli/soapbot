@@ -408,6 +408,16 @@ const checkReminders = async () => {
                         (channel as GuildTextBasedChannel)
                             .send(`**Reminder** for <@${user_id}>:\n${message}`)
                             .then((message) => message.react(DELETE_REACT))
+                            .catch((reason) =>
+                                logger.error(reason, {
+                                    event: "checkReminders",
+                                    reminderId: reminder.id,
+                                    guildId: guild_id,
+                                    channelId: channel_id,
+                                    userId: user_id,
+                                    reminder: message,
+                                })
+                            )
                             .then(() => {
                                 clearInterval(reminderInterval);
                                 deleteReminder(reminder)
@@ -535,6 +545,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         event: "InteractionCreate",
                         interactionId: interaction.id,
                         command: interaction.commandName,
+                        guildId: interaction.guildId,
                     }
                 );
                 return;
@@ -547,17 +558,36 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     event: "InteractionCreate",
                     interactionId: interaction.id,
                     command: interaction.commandName,
+                    guildId: interaction.guildId,
                 });
                 if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp({
-                        content: "There was an error while executing this command!",
-                        ephemeral: true,
-                    });
+                    await interaction
+                        .followUp({
+                            content: "There was an error while executing this command!",
+                            ephemeral: true,
+                        })
+                        .catch((reason) =>
+                            logger.error(reason, {
+                                event: "InteractionCreate",
+                                interactionId: interaction.id,
+                                command: interaction.commandName,
+                                guildId: interaction.guildId,
+                            })
+                        );
                 } else {
-                    await interaction.reply({
-                        content: "There was an error while executing this command!",
-                        ephemeral: true,
-                    });
+                    await interaction
+                        .reply({
+                            content: "There was an error while executing this command!",
+                            ephemeral: true,
+                        })
+                        .catch((reason) =>
+                            logger.error(reason, {
+                                event: "InteractionCreate",
+                                interactionId: interaction.id,
+                                command: interaction.commandName,
+                                guildId: interaction.guildId,
+                            })
+                        );
                 }
             }
         } else {
@@ -577,12 +607,22 @@ client.on(
 
             if (reaction.emoji.name === DELETE_REACT) {
                 if (isOriginalAuthor) {
-                    reaction.message.delete();
-                    logger.verbose("reminder message deleted", {
-                        event: "MessageReactionAdd",
-                        userId: user.id,
-                        reminder: text,
-                    });
+                    reaction.message
+                        .delete()
+                        .catch((reason) =>
+                            logger.error(reason, {
+                                event: "checkReminders",
+                                userId: user.id,
+                                reminder: text,
+                            })
+                        )
+                        .then(() => {
+                            logger.verbose("reminder message deleted", {
+                                event: "MessageReactionAdd",
+                                userId: user.id,
+                                reminder: text,
+                            });
+                        });
                 }
             }
         }

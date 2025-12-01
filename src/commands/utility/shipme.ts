@@ -20,6 +20,7 @@
 
 import { RepliableInteraction, SlashCommandBuilder } from "discord.js";
 import { Command } from "../definitions";
+import logger from "../../lib/logging";
 
 const ShipMe: Command = {
     data: new SlashCommandBuilder().setName("shipme").setDescription("owo"),
@@ -30,9 +31,15 @@ const ShipMe: Command = {
         members.delete(interaction.client.user.id); // delete the bot
         members.delete(interaction.user.id); // delete the user using the command
         const bottom = members.at(Math.floor(Math.random() * members.size));
-        await interaction.reply(
-            `I ship ${interaction.user.username} with ${bottom.user.username}!`
-        );
+        await interaction
+            .reply(`I ship ${interaction.user.username} with ${bottom.user.username}!`)
+            .catch((reason) =>
+                logger.error(reason, {
+                    file: "ShipMe.ts",
+                    interactionId: interaction.id,
+                    guildId: interaction.guildId,
+                })
+            );
     },
 };
 export default ShipMe;

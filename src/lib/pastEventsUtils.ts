@@ -75,11 +75,19 @@ export const listPreviousEvents = async (interaction: RepliableInteraction) => {
 
     if (!events) {
         try {
-            interaction.editReply({
-                content:
-                    "Oops! Something went wrong fetching your events :( Please contact the developer.",
-                components: [],
-            });
+            interaction
+                .editReply({
+                    content:
+                        "Oops! Something went wrong fetching your events :( Please contact the developer.",
+                    components: [],
+                })
+                .catch((reason) =>
+                    logger.error(reason, {
+                        file: "RemindMe.ts",
+                        interactionId: interaction.id,
+                        guildId: interaction.guildId,
+                    })
+                );
             return;
         } catch (err) {
             logger.error(err as string, {

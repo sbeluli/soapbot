@@ -20,6 +20,7 @@
 
 import { GuildMember, RepliableInteraction, SlashCommandBuilder } from "discord.js";
 import { Command } from "../definitions";
+import logger from "../../lib/logging";
 
 const User: Command = {
     data: new SlashCommandBuilder()
@@ -28,11 +29,19 @@ const User: Command = {
     async execute(interaction: RepliableInteraction) {
         // interaction.user is the object representing the User who ran the command
         // interaction.member is the GuildMember object, which represents the user in the specific guild
-        await interaction.reply(
-            `This command was run by ${interaction.user.username}, who joined on ${
-                (interaction.member as GuildMember)?.joinedAt
-            }.`
-        );
+        await interaction
+            .reply(
+                `This command was run by ${interaction.user.username}, who joined on ${
+                    (interaction.member as GuildMember)?.joinedAt
+                }.`
+            )
+            .catch((reason) =>
+                logger.error(reason, {
+                    file: "RemindMe.ts",
+                    interactionId: interaction.id,
+                    guildId: interaction.guildId,
+                })
+            );
     },
 };
 export default User;
