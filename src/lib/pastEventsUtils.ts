@@ -83,7 +83,7 @@ export const listPreviousEvents = async (interaction: RepliableInteraction) => {
                 })
                 .catch((reason) =>
                     logger.error(reason, {
-                        file: "RemindMe.ts",
+                        event: "listPreviousEvents",
                         interactionId: interaction.id,
                         guildId: interaction.guildId,
                     })

@@ -474,6 +474,7 @@ const checkReminders = async () => {
 };
 
 const startRemindersCheck = () => {
+    logger.debug("start reminders check", { event: "startRemindersCheck" });
     checkReminders(); // run immediately
     reminderInterval = setInterval(async () => {
         checkReminders();

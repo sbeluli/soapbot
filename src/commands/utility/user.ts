@@ -37,7 +37,7 @@ const User: Command = {
             )
             .catch((reason) =>
                 logger.error(reason, {
-                    file: "RemindMe.ts",
+                    file: "user.ts",
                     interactionId: interaction.id,
                     guildId: interaction.guildId,
                 })
