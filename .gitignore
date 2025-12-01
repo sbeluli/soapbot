@@ -7,3 +7,4 @@ logs/
 **/.saved.json
 **/secret-**.json
 **.db
+start_service.bash

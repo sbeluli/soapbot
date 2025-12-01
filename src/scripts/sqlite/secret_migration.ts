@@ -74,6 +74,11 @@ const migrateSecrets = async () => {
         const file = __dirname + "/" + fileNames[guild];
         const previousEvents = readFile(file);
 
+        const guildId = fileNames[guild].substring(
+            fileNames[guild].indexOf("-") + 1,
+            fileNames[guild].indexOf(".")
+        );
+
         for (const event of previousEvents) {
             const {
                 title,
@@ -91,7 +96,7 @@ const migrateSecrets = async () => {
                         `VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         "OLD_" + counter,
-                        fileNames[guild],
+                        guildId,
                         title,
                         description,
                         scheduledStartAt,

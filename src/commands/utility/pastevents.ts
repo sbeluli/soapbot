@@ -26,7 +26,7 @@ const PastEvents: Command = {
     data: new SlashCommandBuilder()
         .setName("pastevents")
         .setDescription(
-            "Lists details of the past 5 events in the server, starting from the most recently finished event."
+            "Lists details of the past events in the server, starting from the most recently finished event."
         ),
     async execute(interaction: RepliableInteraction) {
         await interaction.deferReply();
