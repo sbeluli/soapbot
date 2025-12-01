@@ -26,6 +26,8 @@ GUILD_ID="your-server-id-here"
 ```
 
 -   `npm install`
+-   `npm run db:create` to create the events table
+-   `npm run reminders:create` to create the reminders table
 -   `npm run register:dev` to register the slash commands to your server
 -   `npm run main` to start the application
 
