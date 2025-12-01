@@ -74,7 +74,10 @@ export const fetchEvent = async (eventId: string): Promise<DiscordEvent> => {
         );
         return res;
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "fetchEvent",
+            eventId: eventId,
+        });
     } finally {
         db.close();
     }
@@ -90,7 +93,10 @@ export const fetchCurrentEventsByGuild = async (guildId: string) => {
         );
         return res;
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "fetchCurrentEventsByGuild",
+            guildId: guildId,
+        });
     } finally {
         db.close();
     }
@@ -106,7 +112,10 @@ export const fetchPastEventsByGuild = async (guildId: string) => {
         );
         return res;
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "fetchPastEventsByGuild",
+            guildId: guildId,
+        });
     } finally {
         db.close();
     }
@@ -132,9 +141,15 @@ export const addNewEvent = async (event: DiscordEvent) => {
             ]
         );
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "addNewEvent",
+            eventId: event.id,
+        });
     } finally {
-        logger.info("successfully added new event: " + event.name);
+        logger.dbInfo("successfully added new event: " + event.name, {
+            event: "addNewEvent",
+            eventId: event.id,
+        });
         db.close();
     }
 };
@@ -156,9 +171,15 @@ export const updateToPastEvent = async (event: DiscordEvent) => {
             ]
         );
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "updateToPastEvent",
+            eventId: event.id,
+        });
     } finally {
-        logger.info("successfully updated to past event: " + event.name);
+        logger.dbInfo("successfully updated to past event: " + event.name, {
+            event: "updateToPastEvent",
+            eventId: event.id,
+        });
         db.close();
     }
 };
@@ -179,9 +200,15 @@ export const update = async (event: DiscordEvent) => {
             ]
         );
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "update",
+            eventId: event.id,
+        });
     } finally {
-        logger.info("successfully updated event: " + event.name);
+        logger.dbInfo("successfully updated event: " + event.name, {
+            event: "update",
+            eventId: event.id,
+        });
         db.close();
     }
 };
@@ -198,9 +225,17 @@ export const updateSubscriberNum = async (eventId: string, increment: boolean) =
             event.id,
         ]);
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "updateSubscriberNum",
+            eventId: eventId,
+            increment: increment,
+        });
     } finally {
-        logger.info("successfully updated subscriber num");
+        logger.dbInfo("successfully updated subscriber num", {
+            event: "updateSubscriberNum",
+            eventId: eventId,
+            increment: increment,
+        });
         db.close();
     }
 };
@@ -216,9 +251,17 @@ export const updateSubscriberNumTotal = async (
             eventId,
         ]);
     } catch (error) {
-        logger.error(error);
+        logger.dbError(error as string, {
+            event: "updateSubscriberNumTotal",
+            eventId: eventId,
+            subscriberNum: subscriberNum,
+        });
     } finally {
-        logger.info("successfully updated total subscriber num");
+        logger.dbInfo("successfully updated total subscriber num", {
+            event: "updateSubscriberNumTotal",
+            eventId: eventId,
+            subscriberNum: subscriberNum,
+        });
         db.close();
     }
 };

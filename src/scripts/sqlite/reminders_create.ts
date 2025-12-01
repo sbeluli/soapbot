@@ -37,9 +37,11 @@ const createDB = async () => {
                 ")"
         );
     } catch (error) {
-        logger.error(error);
+        logger.error(error as string, { file: "reminders_create.ts" });
     } finally {
-        logger.info("Table 'reminders' created successfully!");
+        logger.info("Table 'reminders' created successfully!", {
+            file: "reminders_create.ts",
+        });
         db.close();
     }
 };

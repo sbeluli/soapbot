@@ -34,7 +34,7 @@ const file = __dirname + "/" + fileName;
 const readFile = () => {
     // Load Data
     if (!fs.existsSync(file)) {
-        logger.warn("File doesnt exist");
+        logger.warn("File doesnt exist", { file: "saved_migration.ts" });
         const content = JSON.stringify({});
         fs.writeFileSync(file, content, "utf8");
     }
@@ -59,11 +59,11 @@ const migrateSaved = async () => {
                 [eventId, guild, role, name, description, scheduledStartAt, false]
             );
         } catch (error) {
-            logger.error(error);
+            logger.error(error as string, { file: "saved_migration.ts" });
         }
     }
 
-    logger.info("Saved file imported to db.");
+    logger.info("Saved file imported to db.", { file: "saved_migration.ts" });
     db.close();
 };
 

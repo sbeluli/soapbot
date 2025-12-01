@@ -91,14 +91,14 @@ let reminderInterval: NodeJS.Timeout;
 
 const updateEventsRoles = async () => {
     isReady = false;
-    logger.info("start initial routine");
+    logger.info("start initial routine", { event: "updateEventsRoles" });
     // checks events in registered guilds and sees if they are in db
     // adds them to db if not
     // updates db with updated event details
     // also checks subscribers and adds/removes roles from users
     addMissedEvents().then(() => {
         isReady = true; // we can set ready after this because deleted events wont effect incoming event changes
-        logger.info("ready");
+        logger.info("ready", { event: "updateEventsRoles" });
     });
     // checks events in db and sees if they exist in discord
     // updates them to past events if not
@@ -118,10 +118,19 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
                     const eventDB = await fetchEvent(id);
                     if (!eventDB) {
                         // make role if it doesn't exist
-                        logger.info("role doesnt exist for " + event.name + "; creating");
+                        logger.info(
+                            "role doesnt exist for " + event.name + "; creating",
+                            {
+                                event: "addMissedEvents",
+                                eventId: event.id,
+                            }
+                        );
                         role = await onCreateEvent(event);
                     } else {
-                        logger.info("role exists for " + event.name);
+                        logger.info("role exists for " + event.name, {
+                            event: "addMissedEvents",
+                            eventId: event.id,
+                        });
                         role = eventDB.role_id;
                         // now check that everything about the event is updated
                         // if name changed, update role name
@@ -131,10 +140,20 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
                                     name: event.name,
                                 })
                                 .then(() => {
-                                    logger.info("role edited for " + event.name);
-                                    update(formatEvent(event, eventDB.role_id));
+                                    logger.info("role edited for " + event.name, {
+                                        event: "addMissedEvents",
+                                        eventId: event.id,
+                                        eventName: event.name,
+                                        roleId: role,
+                                    });
                                 })
-                                .catch(logger.error);
+                                .catch((reason) =>
+                                    logger.error(reason, {
+                                        event: "addMissedEvents",
+                                        eventId: event.id,
+                                        roleId: role,
+                                    })
+                                );
                         }
                         // update db with current stats
                         update(formatEvent(event, eventDB.role_id));
@@ -142,7 +161,11 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
 
                     if (!role) {
                         // exit if role null
-                        logger.info("role null; continue to next event");
+                        logger.info("role null; continue to next event", {
+                            event: "addMissedEvents",
+                            eventId: event.id,
+                            roleId: role,
+                        });
                         continue;
                     }
 
@@ -167,11 +190,22 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
 
                                     if (res) {
                                         logger.info(
-                                            `added missing role (${event.name}) to ${user.user.username}`
+                                            `added missing role (${event.name}) to ${user.user.username}`,
+                                            {
+                                                event: "addMissedEvents",
+                                                eventId: event.id,
+                                                userId: user.user.id,
+                                                roleId: role,
+                                            }
                                         );
                                     }
                                 } catch (err) {
-                                    logger.error(err);
+                                    logger.error(err as string, {
+                                        event: "addMissedEvents",
+                                        eventId: event.id,
+                                        userId: user.user.id,
+                                        roleId: role,
+                                    });
                                 }
                             }
                         }
@@ -186,26 +220,45 @@ const addMissedEvents = async (): Promise<Collection<string, OAuth2Guild>> => {
                                     });
                                     if (res) {
                                         logger.info(
-                                            `removed incorrect role (${event.name}) from ${member.user.username}`
+                                            `removed incorrect role (${event.name}) from ${member.user.username}`,
+                                            {
+                                                event: "addMissedEvents",
+                                                eventId: event.id,
+                                                userId: member.user.id,
+                                                roleId: role,
+                                            }
                                         );
                                     }
                                 } catch (err) {
-                                    logger.error(err);
+                                    logger.error(err as string, {
+                                        event: "addMissedEvents",
+                                        eventId: event.id,
+                                        userId: member.user.id,
+                                        roleId: role,
+                                    });
                                 }
                             }
                         }
                         updateSubscriberNumTotal(id, subscribers.size);
                     } catch (err) {
-                        logger.error(err);
+                        logger.error(err as string, {
+                            event: "addMissedEvents",
+                            eventId: event.id,
+                            roleId: role,
+                        });
                     }
                 }
             } catch (err) {
-                logger.error(err);
+                logger.error(err as string, {
+                    event: "addMissedEvents",
+                });
             }
         }
         return guilds;
     } catch (err) {
-        logger.error(err);
+        logger.error(err as string, {
+            event: "addMissedEvents",
+        });
     }
 };
 
@@ -222,9 +275,17 @@ const deleteMissedEvents = async (): Promise<void> => {
                         try {
                             await guild.roles.delete(event.role_id);
                         } catch (err) {
-                            logger.error(err);
+                            logger.error(err as string, {
+                                event: "deleteMissedEvents",
+                                eventId: event.id,
+                                roleId: event.role_id,
+                            });
                         }
-                        logger.info("old role deleted: " + event.role_id);
+                        logger.info("old role deleted: " + event.role_id, {
+                            event: "deleteMissedEvents",
+                            eventId: event.id,
+                            roleId: event.role_id,
+                        });
                         updateToPastEvent(event);
                     } else {
                         guild.scheduledEvents
@@ -235,21 +296,39 @@ const deleteMissedEvents = async (): Promise<void> => {
                                     try {
                                         await guild.roles.delete(event.role_id);
                                     } catch (err) {
-                                        logger.error(err);
+                                        logger.error(err as string, {
+                                            event: "deleteMissedEvents",
+                                            eventId: event.id,
+                                            roleId: event.role_id,
+                                        });
                                     }
-                                    logger.info("old role deleted: " + event.role_id);
+                                    logger.info("old role deleted: " + event.role_id, {
+                                        event: "deleteMissedEvents",
+                                        eventId: event.id,
+                                        roleId: event.role_id,
+                                    });
                                     updateToPastEvent(event);
                                 }
                             })
-                            .catch(logger.error);
+                            .catch((reason) =>
+                                logger.error(reason, {
+                                    event: "deleteMissedEvents",
+                                    eventId: event.id,
+                                    roleId: event.role_id,
+                                })
+                            );
                     }
                 }
             } catch (err) {
-                logger.error(err);
+                logger.error(err as string, {
+                    event: "deleteMissedEvents",
+                });
             }
         }
     } catch (err) {
-        logger.error(err);
+        logger.error(err as string, {
+            event: "deleteMissedEvents",
+        });
     }
 };
 
@@ -265,7 +344,12 @@ const onCreateEvent = async (
             reason: "for event",
         })
         .then((role) => {
-            logger.info("role created: " + role.name);
+            logger.info("role created: " + role.name, {
+                event: "onCreateEvent",
+                eventId: guildScheduledEvent.id,
+                creator: guildScheduledEvent.creatorId,
+                roleId: role.id,
+            });
             addNewEvent(formatEvent(guildScheduledEvent, role.id));
             // add role to creator
             guildScheduledEvent.guild.members
@@ -275,14 +359,31 @@ const onCreateEvent = async (
                 })
                 .then(() =>
                     logger.info(
-                        `added role (${guildScheduledEvent.name}) to creator: ${guildScheduledEvent.creatorId}`
+                        `added role (${guildScheduledEvent.name}) to creator: ${guildScheduledEvent.creatorId}`,
+                        {
+                            event: "onCreateEvent",
+                            eventId: guildScheduledEvent.id,
+                            creator: guildScheduledEvent.creatorId,
+                            roleId: role.id,
+                        }
                     )
                 )
-                .catch(logger.error);
+                .catch((reason) =>
+                    logger.error(reason, {
+                        event: "onCreateEvent",
+                        eventId: guildScheduledEvent.id,
+                        creator: guildScheduledEvent.creatorId,
+                        roleId: role.id,
+                    })
+                );
             return role.id;
         })
         .catch((err): Promise<string> => {
-            logger.error(err);
+            logger.error(err as string, {
+                event: "onCreateEvent",
+                eventId: guildScheduledEvent.id,
+                creator: guildScheduledEvent.creatorId,
+            });
             return null;
         });
 };
@@ -311,13 +412,49 @@ const checkReminders = async () => {
                                         // so clear the interval and start it again
                                         startRemindersCheck();
                                     })
-                                    .catch(logger.error);
+                                    .catch((reason) =>
+                                        logger.error(reason, {
+                                            event: "checkReminders",
+                                            reminderId: reminder.id,
+                                            guildId: guild_id,
+                                            channelId: channel_id,
+                                            userId: user_id,
+                                            reminder: message,
+                                        })
+                                    );
                             })
-                            .catch(logger.error);
+                            .catch((reason) =>
+                                logger.error(reason, {
+                                    event: "checkReminders",
+                                    reminderId: reminder.id,
+                                    guildId: guild_id,
+                                    channelId: channel_id,
+                                    userId: user_id,
+                                    reminder: message,
+                                })
+                            );
                     })
-                    .catch(logger.error);
+                    .catch((reason) =>
+                        logger.error(reason, {
+                            event: "checkReminders",
+                            reminderId: reminder.id,
+                            guildId: guild_id,
+                            channelId: channel_id,
+                            userId: user_id,
+                            reminder: message,
+                        })
+                    );
             })
-            .catch(logger.error);
+            .catch((reason) =>
+                logger.error(reason, {
+                    event: "checkReminders",
+                    reminderId: reminder.id,
+                    guildId: guild_id,
+                    channelId: channel_id,
+                    userId: user_id,
+                    reminder: message,
+                })
+            );
     }
 };
 
@@ -341,9 +478,9 @@ const subscribe = () => {
 
 const printGuilds = () => {
     client.guilds.fetch().then((guilds) => {
-        logger.info("Guilds:");
+        logger.info("Guilds:", { event: "printGuilds" });
         guilds.forEach((guild) => {
-            logger.info(guild.name + ": " + guild.id);
+            logger.info(guild.name + ": " + guild.id, { event: "printGuilds" });
         });
     });
 };
@@ -368,7 +505,7 @@ for (const command of allCommands) {
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
 // It makes some properties non-nullable.
 client.once(Events.ClientReady, (readyClient) => {
-    logger.info(`Ready! Logged in as ${readyClient.user.tag}`);
+    logger.info(`Ready! Logged in as ${readyClient.user.tag}`, { event: "ClientReady" });
     subscribe();
     printGuilds();
     startRemindersCheck();
@@ -386,14 +523,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 interaction.commandName
             );
             if (!command) {
-                logger.error(`No command matching ${interaction.commandName} was found.`);
+                logger.error(
+                    `No command matching ${interaction.commandName} was found.`,
+                    {
+                        event: "InteractionCreate",
+                        interactionId: interaction.id,
+                        command: interaction.commandName,
+                    }
+                );
                 return;
             }
 
             try {
                 await command.execute(interaction);
             } catch (err) {
-                logger.error(err);
+                logger.error(err as string, {
+                    event: "InteractionCreate",
+                    interactionId: interaction.id,
+                    command: interaction.commandName,
+                });
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({
                         content: "There was an error while executing this command!",
@@ -424,10 +572,18 @@ client.on(
                 // if it was creating during the initial routine, we might already have saved it
                 const event = await fetchEvent(guildScheduledEvent.id);
                 if (!event) {
-                    logger.info("event created: " + guildScheduledEvent.name);
+                    logger.info("event created: " + guildScheduledEvent.name, {
+                        event: "GuildScheduledEventCreate",
+                        eventId: guildScheduledEvent.id,
+                        creator: guildScheduledEvent.creatorId,
+                    });
                     onCreateEvent(guildScheduledEvent);
                 } else {
-                    logger.warn("event already exists: " + guildScheduledEvent.name);
+                    logger.warn("event already exists: " + guildScheduledEvent.name, {
+                        event: "GuildScheduledEventCreate",
+                        eventId: guildScheduledEvent.id,
+                        creator: guildScheduledEvent.creatorId,
+                    });
                 }
             } else {
                 setTimeout(createEvent, 5000);
@@ -446,25 +602,47 @@ client.on(
     ): Promise<void> => {
         const deleteEvent = () => {
             if (isReady) {
-                logger.info("event deleted: " + guildScheduledEvent.name);
+                logger.info("event deleted: " + guildScheduledEvent.name, {
+                    event: "GuildScheduledEventDelete",
+                    eventId: guildScheduledEvent.id,
+                });
                 fetchEvent(guildScheduledEvent.id).then((event) => {
                     // check if event isn't already a past event
                     if (event && !event.is_past) {
                         guildScheduledEvent.guild.roles
                             .delete(event.role_id)
                             .then(() => {
-                                logger.info("role deleted for " + event.name);
+                                logger.info("role deleted for " + event.name, {
+                                    event: "GuildScheduledEventDelete",
+                                    eventId: guildScheduledEvent.id,
+                                    roleId: event.role_id,
+                                });
                                 updateToPastEvent(
                                     formatEvent(guildScheduledEvent, event.role_id)
                                 );
                             })
-                            .catch(logger.error);
+                            .catch((reason) =>
+                                logger.error(reason, {
+                                    event: "GuildScheduledEventDelete",
+                                    eventId: guildScheduledEvent.id,
+                                    roleId: event.role_id,
+                                })
+                            );
                     } else if (!event) {
                         logger.warn(
-                            "couldnt find event! weirdge... id: " + guildScheduledEvent.id
+                            "couldnt find event! weirdge... name: " +
+                                guildScheduledEvent.name,
+                            {
+                                event: "GuildScheduledEventDelete",
+                                eventId: guildScheduledEvent.id,
+                            }
                         );
                     } else {
-                        logger.warn("event already past: " + guildScheduledEvent.name);
+                        logger.warn("event already past: " + guildScheduledEvent.name, {
+                            event: "GuildScheduledEventDelete",
+                            eventId: guildScheduledEvent.id,
+                            roleId: event.role_id,
+                        });
                     }
                 });
             } else {
@@ -491,7 +669,14 @@ client.on(
                             newGuildScheduledEvent.status === 3 ||
                             newGuildScheduledEvent.status === 4
                         ) {
-                            logger.info("event canceled: " + newGuildScheduledEvent.name);
+                            logger.info(
+                                "event canceled: " + newGuildScheduledEvent.name,
+                                {
+                                    event: "GuildScheduledEventUpdate",
+                                    eventId: newGuildScheduledEvent.id,
+                                    roleId: event.role_id,
+                                }
+                            );
                             // check if event isn't already a past event
                             if (!event.is_past) {
                                 // complete or canceled
@@ -500,7 +685,12 @@ client.on(
                                     .then(() => {
                                         logger.info(
                                             "role deleted for " +
-                                                newGuildScheduledEvent.name
+                                                newGuildScheduledEvent.name,
+                                            {
+                                                event: "GuildScheduledEventUpdate",
+                                                eventId: newGuildScheduledEvent.id,
+                                                roleId: event.role_id,
+                                            }
                                         );
                                         updateToPastEvent(
                                             formatEvent(
@@ -509,10 +699,21 @@ client.on(
                                             )
                                         );
                                     })
-                                    .catch(logger.error);
+                                    .catch((reason) =>
+                                        logger.error(reason, {
+                                            event: "GuildScheduledEventUpdate",
+                                            eventId: newGuildScheduledEvent.id,
+                                            roleId: event.role_id,
+                                        })
+                                    );
                             } else {
                                 logger.warn(
-                                    "event already past: " + newGuildScheduledEvent.name
+                                    "event already past: " + newGuildScheduledEvent.name,
+                                    {
+                                        event: "GuildScheduledEventUpdate",
+                                        eventId: newGuildScheduledEvent.id,
+                                        roleId: event.role_id,
+                                    }
                                 );
                             }
                         } else if (
@@ -525,13 +726,26 @@ client.on(
                                 })
                                 .then(() => {
                                     logger.info(
-                                        "role edited for " + newGuildScheduledEvent.name
+                                        "role edited for " + newGuildScheduledEvent.name,
+                                        {
+                                            event: "GuildScheduledEventUpdate",
+                                            eventId: newGuildScheduledEvent.id,
+                                            eventName: newGuildScheduledEvent.name,
+                                            roleId: event.role_id,
+                                        }
                                     );
                                     update(
                                         formatEvent(newGuildScheduledEvent, event.role_id)
                                     );
                                 })
-                                .catch(logger.error);
+                                .catch((reason) =>
+                                    logger.error(reason, {
+                                        event: "GuildScheduledEventUpdate",
+                                        eventId: newGuildScheduledEvent.id,
+                                        eventName: newGuildScheduledEvent.name,
+                                        roleId: event.role_id,
+                                    })
+                                );
                             // update event details
                             update(formatEvent(newGuildScheduledEvent, event.role_id));
                         } else {
@@ -540,8 +754,13 @@ client.on(
                         }
                     } else {
                         logger.warn(
-                            "couldnt find event! weirdge... id: " +
-                                newGuildScheduledEvent.id
+                            "couldnt find event! weirdge... name: " +
+                                newGuildScheduledEvent.name,
+                            {
+                                event: "GuildScheduledEventUpdate",
+                                eventId: newGuildScheduledEvent.id,
+                                roleId: event.role_id,
+                            }
                         );
                     }
                 });
@@ -563,7 +782,6 @@ client.on(
     ): void => {
         const userAdd = () => {
             if (isReady) {
-                logger.info("subscribing");
                 fetchEvent(guildScheduledEvent.id).then(async (event) => {
                     if (event) {
                         try {
@@ -583,7 +801,13 @@ client.on(
                                                 "user subscribed: " +
                                                     user.username +
                                                     " - " +
-                                                    guildScheduledEvent.name
+                                                    guildScheduledEvent.name,
+                                                {
+                                                    event: "GuildScheduledEventUserAdd",
+                                                    guildScheduledEventId:
+                                                        guildScheduledEvent.id,
+                                                    userId: user.id,
+                                                }
                                             );
                                             updateSubscriberNum(
                                                 guildScheduledEvent.id,
@@ -591,17 +815,38 @@ client.on(
                                             );
                                         },
                                         (reason: any) => {
-                                            logger.warn(reason);
+                                            logger.warn(reason, {
+                                                event: "GuildScheduledEventUserAdd",
+                                                guildScheduledEventId:
+                                                    guildScheduledEvent.id,
+                                                userId: user.id,
+                                            });
                                         }
                                     )
-                                    .catch(logger.error);
+                                    .catch((reason) =>
+                                        logger.error(reason, {
+                                            event: "GuildScheduledEventUserAdd",
+                                            guildScheduledEventId: guildScheduledEvent.id,
+                                            userId: user.id,
+                                        })
+                                    );
                             }
                         } catch (err) {
-                            logger.error(err);
+                            logger.error(err as string, {
+                                event: "GuildScheduledEventUserAdd",
+                                guildScheduledEventId: guildScheduledEvent.id,
+                                userId: user.id,
+                            });
                         }
                     } else {
                         logger.warn(
-                            "couldnt find event! weirdge... id: " + guildScheduledEvent.id
+                            "couldnt find event! weirdge... name: " +
+                                guildScheduledEvent.name,
+                            {
+                                event: "GuildScheduledEventUserAdd",
+                                guildScheduledEventId: guildScheduledEvent.id,
+                                userId: user.id,
+                            }
                         );
                     }
                 });
@@ -642,7 +887,13 @@ client.on(
                                                 "user unsubscribed: " +
                                                     user.username +
                                                     " - " +
-                                                    guildScheduledEvent.name
+                                                    guildScheduledEvent.name,
+                                                {
+                                                    event: "GuildScheduledEventUserRemove",
+                                                    guildScheduledEventId:
+                                                        guildScheduledEvent.id,
+                                                    userId: user.id,
+                                                }
                                             );
                                             updateSubscriberNum(
                                                 guildScheduledEvent.id,
@@ -650,17 +901,38 @@ client.on(
                                             );
                                         },
                                         (reason: any) => {
-                                            logger.warn(reason);
+                                            logger.warn(reason, {
+                                                event: "GuildScheduledEventUserRemove",
+                                                guildScheduledEventId:
+                                                    guildScheduledEvent.id,
+                                                userId: user.id,
+                                            });
                                         }
                                     )
-                                    .catch(logger.error);
+                                    .catch((reason) =>
+                                        logger.error(reason, {
+                                            event: "GuildScheduledEventUserRemove",
+                                            guildScheduledEventId: guildScheduledEvent.id,
+                                            userId: user.id,
+                                        })
+                                    );
                             }
                         } catch (err) {
-                            logger.error(err);
+                            logger.error(err as string, {
+                                event: "GuildScheduledEventUserRemove",
+                                guildScheduledEventId: guildScheduledEvent.id,
+                                userId: user.id,
+                            });
                         }
                     } else {
                         logger.warn(
-                            "couldnt find event! weirdge... id: " + guildScheduledEvent.id
+                            "couldnt find event! weirdge... name: " +
+                                guildScheduledEvent.name,
+                            {
+                                event: "GuildScheduledEventUserRemove",
+                                guildScheduledEventId: guildScheduledEvent.id,
+                                userId: user.id,
+                            }
                         );
                     }
                 });

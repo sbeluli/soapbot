@@ -36,7 +36,9 @@ const rest = new REST().setToken(process.env.TOKEN);
 // and deploy your commands!
 (async () => {
     try {
-        logger.info(`Started removing ${commands.length} application (/) commands.`);
+        logger.info(`Started removing ${commands.length} application (/) commands.`, {
+            file: "remove-guild-commands.js",
+        });
 
         // The put method is used to fully refresh all commands in the guild with the current set
         const data = await rest.put(
@@ -46,9 +48,11 @@ const rest = new REST().setToken(process.env.TOKEN);
             }
         );
 
-        logger.info(`Successfully removed ${commands.length} application (/) commands.`);
+        logger.info(`Successfully removed ${commands.length} application (/) commands.`, {
+            file: "remove-guild-commands.js",
+        });
     } catch (error) {
         // And of course, make sure you catch and log any errors!
-        logger.error(error);
+        logger.error(error, { file: "remove-guild-commands.js" });
     }
 })();
