@@ -27,8 +27,11 @@ import {
     GuildScheduledEvent,
     GuildScheduledEventStatus,
     GuildTextBasedChannel,
+    MessageReaction,
     OAuth2Guild,
     PartialGuildScheduledEvent,
+    PartialMessageReaction,
+    PartialUser,
     RepliableInteraction,
     User,
 } from "discord.js";
@@ -78,6 +81,7 @@ export interface EventDetails {
 }
 
 const token = process.env.TOKEN;
+const DELETE_REACT = String.fromCharCode(0x274c);
 // alright im just gonna put this here
 // so in the initial routine, we use this ready flag to delay any listeners from doing their jobs until we're done
 // BUT, it's possible that if the change was made BEFORE the initial routine fetched the guild the event is from, the change could be reflected there
@@ -403,6 +407,7 @@ const checkReminders = async () => {
                     .then((channel) => {
                         (channel as GuildTextBasedChannel)
                             .send(`**Reminder** for <@${user_id}>:\n${message}`)
+                            .then((message) => message.react(DELETE_REACT))
                             .then(() => {
                                 clearInterval(reminderInterval);
                                 deleteReminder(reminder)
@@ -462,7 +467,7 @@ const startRemindersCheck = () => {
     checkReminders(); // run immediately
     reminderInterval = setInterval(async () => {
         checkReminders();
-    }, 30000);
+    }, 10000);
 };
 
 // Pubsub
@@ -493,6 +498,7 @@ const client = new CustomClient({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildScheduledEvents,
+        GatewayIntentBits.GuildMessageReactions,
     ],
 });
 
@@ -560,6 +566,28 @@ client.on(Events.InteractionCreate, async (interaction) => {
     };
     runInteraction();
 });
+
+client.on(
+    Events.MessageReactionAdd,
+    (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) => {
+        logger.debug("message reaction", { event: "MessageReactionAdd" });
+        if (reaction.message.author.id === client.user.id) {
+            const text = reaction.message.content;
+            const isOriginalAuthor = text.includes(`**Reminder** for <@${user.id}>:`);
+
+            if (reaction.emoji.name === DELETE_REACT) {
+                if (isOriginalAuthor) {
+                    reaction.message.delete();
+                    logger.verbose("reminder message deleted", {
+                        event: "MessageReactionAdd",
+                        userId: user.id,
+                        reminder: text,
+                    });
+                }
+            }
+        }
+    }
+);
 
 client.on(
     Events.GuildScheduledEventCreate,
