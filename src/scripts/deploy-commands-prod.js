@@ -21,7 +21,7 @@
 import { REST, Routes } from "discord.js";
 import "dotenv/config";
 import allCommands from "../commands";
-import logger from "../../lib/logging";
+import logger from "../lib/logging";
 
 const commands = [];
 
