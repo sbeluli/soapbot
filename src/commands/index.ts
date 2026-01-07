@@ -22,6 +22,7 @@ import User from "./utility/user";
 import ShipMe from "./utility/shipme";
 import PastEvents from "./utility/pastevents";
 import RemindMe from "./utility/remindme";
+import Help from "./utility/help";
 
-const allCommands = [User, ShipMe, PastEvents, RemindMe];
+const allCommands = [User, ShipMe, PastEvents, RemindMe, Help];
 export default allCommands;

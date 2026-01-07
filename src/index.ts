@@ -20,6 +20,7 @@
 
 // Require the necessary discord.js classes
 import {
+    ActivityType,
     Collection,
     Events,
     GatewayIntentBits,
@@ -527,6 +528,12 @@ client.once(Events.ClientReady, (readyClient) => {
     printGuilds();
     startRemindersCheck();
     updateEventsRoles();
+
+    client.user.setActivity({
+        type: ActivityType.Custom,
+        name: "customstatus",
+        state: "/help",
+    });
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
