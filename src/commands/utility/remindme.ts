@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024  Sophia Beluli
+ * Copyright (C) 2024  Sage Beluli
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -27,6 +27,7 @@ import {
 } from "discord.js";
 import { Command, RemindMeData } from "../definitions";
 import pubsub from "pubsub-js";
+import logger from "../../lib/logging";
 
 const numToString = new Map<number, string>([
     [60000, "minute(s)"],
@@ -37,9 +38,7 @@ const numToString = new Map<number, string>([
 const RemindMe: Command = {
     data: new SlashCommandBuilder()
         .setName("remindme")
-        .setDescription(
-            "Set up a one time ping as a reminder. (May induce dementia)"
-        )
+        .setDescription("Set up a one time ping as a reminder. (May induce dementia)")
         .addStringOption((option) =>
             option
                 .setName("message")
@@ -51,9 +50,7 @@ const RemindMe: Command = {
         .addNumberOption((option) =>
             option
                 .setName("time_units")
-                .setDescription(
-                    "The units of the time you want to input. Default: hours"
-                )
+                .setDescription("The units of the time you want to input. Default: hours")
                 .setChoices(
                     { name: "minutes", value: 60000 },
                     { name: "hours", value: 3600000 },
@@ -72,9 +69,7 @@ const RemindMe: Command = {
         .addChannelOption((option) =>
             option
                 .setName("channel")
-                .setDescription(
-                    "The channel to remind you in. Default: Current Channel"
-                )
+                .setDescription("The channel to remind you in. Default: Current Channel")
                 // Ensure the user can only select a TextChannel for output
                 .addChannelTypes(ChannelType.GuildText)
         )
@@ -86,6 +81,7 @@ const RemindMe: Command = {
                 )
         ),
     async execute(interaction: ChatInputCommandInteraction) {
+        const guildId = interaction.guildId;
         const userId = interaction.user.id;
         const message = interaction.options.getString("message");
         const timeMult = interaction.options.getNumber("time_units") ?? 3600000;
@@ -96,7 +92,14 @@ const RemindMe: Command = {
         const channel = channelInput ?? interaction.channel;
         const ephemeral = interaction.options.getBoolean("ephemeral") ?? true;
 
-        const data: RemindMeData = { userId, message, timeMult, time, channel };
+        const data: RemindMeData = {
+            guildId,
+            userId,
+            channelId: channel.id,
+            message,
+            time,
+            timeMult,
+        };
         const page: APIEmbed = {
             title: "Reminder Set",
             fields: [
@@ -128,23 +131,50 @@ const RemindMe: Command = {
                     .has(["0x0000000000000800", "0x0000000000000400"]) // send messages, view channel
             ) {
                 pubsub.publish("remindme", data);
-                await interaction.reply({
-                    embeds: [page],
-                    ephemeral: ephemeral,
-                });
+                await interaction
+                    .reply({
+                        embeds: [page],
+                        ephemeral: ephemeral,
+                    })
+                    .catch((reason) =>
+                        logger.error(reason, {
+                            file: "RemindMe.ts",
+                            interactionId: interaction.id,
+                            command: interaction.commandName,
+                            guildId: interaction.guildId,
+                        })
+                    );
             } else {
-                await interaction.reply({
-                    content: "I don't have access to that channel. Sorry :(",
-                    ephemeral: true,
-                });
+                await interaction
+                    .reply({
+                        content: "I don't have access to that channel. Sorry :(",
+                        ephemeral: true,
+                    })
+                    .catch((reason) =>
+                        logger.error(reason, {
+                            file: "RemindMe.ts",
+                            interactionId: interaction.id,
+                            command: interaction.commandName,
+                            guildId: interaction.guildId,
+                        })
+                    );
                 return;
             }
         } else {
             pubsub.publish("remindme", data);
-            await interaction.reply({
-                embeds: [page],
-                ephemeral: ephemeral,
-            });
+            await interaction
+                .reply({
+                    embeds: [page],
+                    ephemeral: ephemeral,
+                })
+                .catch((reason) =>
+                    logger.error(reason, {
+                        file: "RemindMe.ts",
+                        interactionId: interaction.id,
+                        command: interaction.commandName,
+                        guildId: interaction.guildId,
+                    })
+                );
         }
     },
 };

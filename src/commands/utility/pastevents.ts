@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024  Sophia Beluli
+ * Copyright (C) 2024  Sage Beluli
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,20 +18,15 @@
  * can be found on sophiabeluli.ca
  */
 
-import {
-    RepliableInteraction,
-    SlashCommandBuilder,
-    // APIEmbed,
-} from "discord.js";
+import { RepliableInteraction, SlashCommandBuilder } from "discord.js";
 import { Command } from "../definitions";
-// import { loadPreviousEvents } from "../..";
 import pubsub from "pubsub-js";
 
 const PastEvents: Command = {
     data: new SlashCommandBuilder()
         .setName("pastevents")
         .setDescription(
-            "Lists details of the past 5 events in the server, starting from the most recently finished event."
+            "Lists details of the past events in the server, starting from the most recently finished event."
         ),
     async execute(interaction: RepliableInteraction) {
         await interaction.deferReply();

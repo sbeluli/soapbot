@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024  Sophia Beluli
+ * Copyright (C) 2024  Sage Beluli
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -21,6 +21,7 @@
 import { REST, Routes } from "discord.js";
 import "dotenv/config";
 import allCommands from "../commands";
+import logger from "../lib/logging";
 
 const commands = [];
 
@@ -35,26 +36,23 @@ const rest = new REST().setToken(process.env.TOKEN);
 // and deploy your commands!
 (async () => {
     try {
-        console.log(
-            `Started refreshing ${commands.length} application (/) commands.`
-        );
+        logger.info(`Started refreshing ${commands.length} application (/) commands.`, {
+            file: "deploy-commands-dev.js",
+        });
 
         // The put method is used to fully refresh all commands in the guild with the current set
         const data = await rest.put(
-            Routes.applicationGuildCommands(
-                process.env.CLIENT_ID,
-                process.env.GUILD_ID
-            ),
+            Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
             {
                 body: commands,
             }
         );
 
-        console.log(
-            `Successfully reloaded ${data.length} application (/) commands.`
-        );
+        logger.info(`Successfully reloaded ${data.length} application (/) commands.`, {
+            file: "deploy-commands-dev.js",
+        });
     } catch (error) {
         // And of course, make sure you catch and log any errors!
-        console.error(error);
+        logger.error(error, { file: "deploy-commands-dev.js" });
     }
 })();

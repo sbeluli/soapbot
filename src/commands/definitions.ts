@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024  Sophia Beluli
+ * Copyright (C) 2024  Sage Beluli
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -20,7 +20,6 @@
 
 import {
     ChatInputCommandInteraction,
-    GuildTextBasedChannel,
     RepliableInteraction,
     SlashCommandBuilder,
     SlashCommandOptionsOnlyBuilder,
@@ -34,9 +33,10 @@ export interface Command {
 }
 
 export interface RemindMeData {
+    guildId: string;
     userId: string;
+    channelId: string;
     message: string;
-    timeMult: number;
     time: number;
-    channel: GuildTextBasedChannel;
+    timeMult: number;
 }

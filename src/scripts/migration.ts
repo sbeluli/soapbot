@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2024  Sage Beluli
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contact details for information regarding this program and its license
+ * can be found on sophiabeluli.ca
+ */
+
 import "dotenv/config";
 import fs from "node:fs";
 import { fileURLToPath } from "url";
@@ -6,6 +26,7 @@ import { Events, GatewayIntentBits } from "discord.js";
 import CustomClient from "../CustomClient";
 import { eventsRolesInfo } from "..";
 import allCommands from "../commands";
+import logger from "../lib/logging";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,7 +37,7 @@ let eventsRoles = new Map<any, any>();
 
 // Load Data
 if (!fs.existsSync(file)) {
-    console.warn("File doesnt exist");
+    logger.warn("File doesn't exist");
     const content = JSON.stringify({});
     fs.writeFileSync(file, content, "utf8");
 }
@@ -25,7 +46,7 @@ eventsRoles = new Map(Object.entries(eventRolesString));
 
 if (typeof eventsRoles.values().next().value === "string") {
     // need to migrate
-    console.log("Migration needed.");
+    logger.info("Migration needed.");
     // Create a new client instance
     const client = new CustomClient({
         intents: [
@@ -46,24 +67,24 @@ if (typeof eventsRoles.values().next().value === "string") {
     client.login(process.env.TOKEN);
 
     client.once(Events.ClientReady, async (readyClient) => {
-        console.log(`Ready to migrate! Logged in as ${readyClient.user.tag}`);
+        logger.info(`Ready to migrate! Logged in as ${readyClient.user.tag}`);
         let newEventsRoles = new Map<string, eventsRolesInfo>();
 
         // search for event in all guilds
-        console.log(eventsRoles);
+        logger.info(eventsRoles);
         migrate(client, newEventsRoles).then(() => {
             fs.writeFileSync(
                 file,
                 JSON.stringify(Object.fromEntries(newEventsRoles)),
                 "utf8"
             );
-            console.log("File Updated");
-            console.log("Migration Finished.");
+            logger.info("File Updated");
+            logger.info("Migration Finished.");
             client.destroy();
         });
     });
 } else {
-    console.log("Migration not needed.");
+    logger.info("Migration not needed.");
 }
 
 const migrate = async (
@@ -77,7 +98,7 @@ const migrate = async (
         eventsRoles.forEach((role: string, event: string) => {
             const eventObj = events.get(event);
             if (eventObj) {
-                console.log("adding new event structure for " + event);
+                logger.info("adding new event structure for " + event);
                 newEventsRoles.set(event, {
                     role: role,
                     guild: guild.id,

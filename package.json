@@ -5,8 +5,10 @@
         "discord.js": "^14.16.3",
         "dotenv": "^16.4.5",
         "pubsub-js": "^1.9.5",
+        "sqlite3": "^5.1.7",
         "ts-node": "^10.9.2",
-        "typescript": "^5.6.3"
+        "typescript": "^5.6.3",
+        "winston": "^3.18.3"
     },
     "type": "module",
     "scripts": {
@@ -15,6 +17,10 @@
         "register:prod": "node --experimental-specifier-resolution=node --loader ts-node/esm src/scripts/deploy-commands-prod.js",
         "unregister": "node --experimental-specifier-resolution=node --loader ts-node/esm src/scripts/remove-guild-commands.js",
         "screen": "screen -S sophbot npm run main",
-        "migration": "node --experimental-specifier-resolution=node --loader ts-node/esm src/scripts/migration.ts"
+        "migration": "node --experimental-specifier-resolution=node --loader ts-node/esm src/scripts/migration.ts",
+        "db:create": "node --experimental-specifier-resolution=node --loader ts-node/esm src/scripts/sqlite/db_create.ts",
+        "db:migratesaved": "node --experimental-specifier-resolution=node --loader ts-node/esm src/scripts/sqlite/saved_migration.ts",
+        "db:migratesecret": "node --experimental-specifier-resolution=node --loader ts-node/esm src/scripts/sqlite/secret_migration.ts",
+        "reminders:create": "node --experimental-specifier-resolution=node --loader ts-node/esm src/scripts/sqlite/reminders_create.ts"
     }
 }

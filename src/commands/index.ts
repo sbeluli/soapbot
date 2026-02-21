@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024  Sophia Beluli
+ * Copyright (C) 2024  Sage Beluli
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -22,6 +22,7 @@ import User from "./utility/user";
 import ShipMe from "./utility/shipme";
 import PastEvents from "./utility/pastevents";
 import RemindMe from "./utility/remindme";
+import Help from "./utility/help";
 
-const allCommands = [User, ShipMe, PastEvents, RemindMe];
+const allCommands = [User, ShipMe, PastEvents, RemindMe, Help];
 export default allCommands;

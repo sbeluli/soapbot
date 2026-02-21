@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024  Sophia Beluli
+ * Copyright (C) 2024  Sage Beluli
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -18,12 +18,9 @@
  * can be found on sophiabeluli.ca
  */
 
-import {
-    GuildMember,
-    RepliableInteraction,
-    SlashCommandBuilder,
-} from "discord.js";
+import { GuildMember, RepliableInteraction, SlashCommandBuilder } from "discord.js";
 import { Command } from "../definitions";
+import logger from "../../lib/logging";
 
 const User: Command = {
     data: new SlashCommandBuilder()
@@ -32,11 +29,19 @@ const User: Command = {
     async execute(interaction: RepliableInteraction) {
         // interaction.user is the object representing the User who ran the command
         // interaction.member is the GuildMember object, which represents the user in the specific guild
-        await interaction.reply(
-            `This command was run by ${
-                interaction.user.username
-            }, who joined on ${(interaction.member as GuildMember)?.joinedAt}.`
-        );
+        await interaction
+            .reply(
+                `This command was run by ${interaction.user.username}, who joined on ${
+                    (interaction.member as GuildMember)?.joinedAt
+                }.`
+            )
+            .catch((reason) =>
+                logger.error(reason, {
+                    file: "user.ts",
+                    interactionId: interaction.id,
+                    guildId: interaction.guildId,
+                })
+            );
     },
 };
 export default User;
