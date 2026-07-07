@@ -63,7 +63,6 @@ const RemindMe: Command = {
                 .setDescription(
                     "How far in the future you want to be reminded, in time_units. Default: 1"
                 )
-                .setMaxValue(99)
                 .setMinValue(0)
         )
         .addChannelOption((option) =>
