@@ -130,7 +130,7 @@ const RemindMe: Command = {
                 .addNumberOption((option) =>
                     option
                         .setName("month")
-                        .setDescription("The month.")
+                        .setDescription("The month. Default: current")
                         .setChoices(
                             { name: "January", value: 0 },
                             { name: "February", value: 1 },
