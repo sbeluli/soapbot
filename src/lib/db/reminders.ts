@@ -20,7 +20,7 @@
 
 import sqlite3 from "sqlite3";
 import { get, runWithParams } from "../../scripts/sqlite/sqlite_lib";
-import { RemindMeData } from "../../commands/definitions";
+import { RemindMeDateData, RemindMeTimeData } from "../../commands/definitions";
 import logger from "../../lib/logging";
 
 export interface Reminder {
@@ -32,15 +32,42 @@ export interface Reminder {
     date: string;
 }
 
-export const formatReminder = (reminder: RemindMeData): Reminder => {
-    const date = new Date(Date.now() + reminder.time * reminder.timeMult).toISOString();
-    return {
-        guild_id: reminder.guildId,
-        user_id: reminder.userId,
-        channel_id: reminder.channelId,
-        message: reminder.message,
-        date: date,
-    };
+export const formatReminderTime = (reminder: RemindMeTimeData): Reminder => {
+    try {
+        const date = new Date(Date.now() + reminder.time).toISOString();
+        return {
+            guild_id: reminder.guildId,
+            user_id: reminder.userId,
+            channel_id: reminder.channelId,
+            message: reminder.message,
+            date: date,
+        };
+    } catch (err) {
+        logger.error(err as string, {
+            event: "formatReminderTime",
+            userId: reminder.userId,
+            guildId: reminder.guildId,
+        });
+    }
+};
+
+export const formatReminderDate = (reminder: RemindMeDateData): Reminder => {
+    try {
+        const date = reminder.date.toISOString();
+        return {
+            guild_id: reminder.guildId,
+            user_id: reminder.userId,
+            channel_id: reminder.channelId,
+            message: reminder.message,
+            date: date,
+        };
+    } catch (err) {
+        logger.error(err as string, {
+            event: "formatReminderDate",
+            userId: reminder.userId,
+            guildId: reminder.guildId,
+        });
+    }
 };
 
 export const addReminder = async (reminder: Reminder) => {

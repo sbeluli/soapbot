@@ -23,20 +23,33 @@ import {
     RepliableInteraction,
     SlashCommandBuilder,
     SlashCommandOptionsOnlyBuilder,
+    SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
 
 export interface Command {
-    data: SlashCommandBuilder | SlashCommandOptionsOnlyBuilder;
+    data:
+        | SlashCommandBuilder
+        | SlashCommandOptionsOnlyBuilder
+        | SlashCommandSubcommandsOnlyBuilder;
     execute:
         | ((interaction: RepliableInteraction) => void)
         | ((interaction: ChatInputCommandInteraction) => void);
 }
 
-export interface RemindMeData {
+export interface RemindMeTimeData {
     guildId: string;
     userId: string;
     channelId: string;
     message: string;
     time: number;
-    timeMult: number;
+    commandName: string;
+}
+
+export interface RemindMeDateData {
+    guildId: string;
+    userId: string;
+    channelId: string;
+    message: string;
+    date: Date;
+    commandName: string;
 }
