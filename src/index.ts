@@ -41,7 +41,7 @@ import CustomClient from "./CustomClient";
 import allCommands from "./commands";
 import pubsub from "pubsub-js";
 import { listPreviousEvents } from "./lib/pastEventsUtils";
-import { RemindMeData } from "./commands/definitions";
+import { RemindMeDateData, RemindMeTimeData } from "./commands/definitions";
 import {
     addNewEvent,
     fetchCurrentEventsByGuild,
@@ -56,7 +56,8 @@ import {
     addReminder,
     deleteReminder,
     fetchSoonestReminder,
-    formatReminder,
+    formatReminderDate,
+    formatReminderTime,
 } from "./lib/db/reminders";
 import logger from "./lib/logging";
 
@@ -488,8 +489,11 @@ const subscribe = () => {
     pubsub.subscribe("pastevents", (_msg, interaction: RepliableInteraction) => {
         listPreviousEvents(interaction);
     });
-    pubsub.subscribe("remindme", (_msg, data: RemindMeData) => {
-        addReminder(formatReminder(data));
+    pubsub.subscribe("remindmetime", (_msg, data: RemindMeTimeData) => {
+        addReminder(formatReminderTime(data));
+    });
+    pubsub.subscribe("remindmedate", (_msg, data: RemindMeDateData) => {
+        addReminder(formatReminderDate(data));
     });
 };
 
