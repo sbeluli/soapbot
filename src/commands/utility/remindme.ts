@@ -127,7 +127,9 @@ const RemindMe: Command = {
                 .addStringOption((option) =>
                     option
                         .setName("timezone")
-                        .setDescription("The timezone. Default: America/Toronto")
+                        .setDescription(
+                            "The timezone identifier. Default: America/Toronto"
+                        )
                         .setAutocomplete(true)
                 )
                 .addNumberOption((option) =>
