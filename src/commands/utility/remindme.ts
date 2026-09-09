@@ -302,8 +302,6 @@ const RemindMe: Command = {
                         millisecond: 0,
                     }).tz(timezone);
 
-                    logger.debug("timezone date: " + date.format());
-
                     // if the date is before now, give error
                     if (date.isSameOrBefore(now)) {
                         sendErrorMessage(

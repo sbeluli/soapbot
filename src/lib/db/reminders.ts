@@ -55,7 +55,6 @@ export const formatReminderDate = (reminder: RemindMeDateData): Reminder => {
     try {
         // convert to utc for storage
         const formattedDate = reminder.date.utc().format();
-        logger.debug("utc date: " + formattedDate);
         return {
             guild_id: reminder.guildId,
             user_id: reminder.userId,
