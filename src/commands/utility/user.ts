@@ -19,8 +19,8 @@
  */
 
 import { GuildMember, RepliableInteraction, SlashCommandBuilder } from "discord.js";
-import { Command } from "../definitions";
-import logger from "../../lib/logging";
+import { Command } from "../definitions.js";
+import logger from "../../lib/logging.js";
 
 const User: Command = {
     data: new SlashCommandBuilder()

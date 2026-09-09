@@ -18,11 +18,11 @@
  * can be found on sophiabeluli.ca
  */
 
-import User from "./utility/user";
-import ShipMe from "./utility/shipme";
-import PastEvents from "./utility/pastevents";
-import RemindMe from "./utility/remindme";
-import Help from "./utility/help";
+import User from "./utility/user.js";
+import ShipMe from "./utility/shipme.js";
+import PastEvents from "./utility/pastevents.js";
+import RemindMe from "./utility/remindme.js";
+import Help from "./utility/help.js";
 
 const allCommands = [User, ShipMe, PastEvents, RemindMe, Help];
 export default allCommands;

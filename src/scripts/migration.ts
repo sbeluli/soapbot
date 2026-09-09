@@ -23,10 +23,10 @@ import fs from "node:fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { Events, GatewayIntentBits } from "discord.js";
-import CustomClient from "../CustomClient";
-import { eventsRolesInfo } from "..";
-import allCommands from "../commands";
-import logger from "../lib/logging";
+import CustomClient from "../CustomClient.js";
+import { eventsRolesInfo } from "../index.js";
+import allCommands from "../commands/index.js";
+import logger from "../lib/logging.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

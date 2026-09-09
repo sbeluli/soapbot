@@ -23,13 +23,13 @@ import {
     allWithParams,
     getWithParams,
     runWithParams,
-} from "../../scripts/sqlite/sqlite_lib";
+} from "../../scripts/sqlite/sqlite_lib.js";
 import {
     GuildScheduledEvent,
     GuildScheduledEventStatus,
     PartialGuildScheduledEvent,
 } from "discord.js";
-import logger from "../../lib/logging";
+import logger from "../../lib/logging.js";
 
 export interface DiscordEvent {
     id: string;

@@ -20,14 +20,18 @@
 
 import {
     APIEmbed,
+    AutocompleteInteraction,
     ChannelType,
     ChatInputCommandInteraction,
     GuildTextBasedChannel,
     SlashCommandBuilder,
 } from "discord.js";
-import { Command, RemindMeDateData, RemindMeTimeData } from "../definitions";
+import { Command, RemindMeDateData, RemindMeTimeData } from "../definitions.js";
 import pubsub from "pubsub-js";
-import logger from "../../lib/logging";
+import logger from "../../lib/logging.js";
+import moment from "moment-timezone";
+
+const tzNames = moment.tz.names();
 
 const numToString = new Map<number, string>([
     [60000, "minute(s)"],
@@ -120,6 +124,12 @@ const RemindMe: Command = {
                         .setMaxLength(950)
                         .setMinLength(1)
                 )
+                .addStringOption((option) =>
+                    option
+                        .setName("timezone")
+                        .setDescription("The timezone. Default: America/Toronto")
+                        .setAutocomplete(true)
+                )
                 .addNumberOption((option) =>
                     option
                         .setName("year")
@@ -157,7 +167,7 @@ const RemindMe: Command = {
                     option
                         .setName("hour")
                         .setDescription(
-                            "The hour, in military time (0-23). Default current + 1"
+                            "The hour, in military time (0-23). Default: current"
                         )
                         .setMinValue(0)
                         .setMaxValue(23)
@@ -187,16 +197,38 @@ const RemindMe: Command = {
                 )
         ),
 
+    async autocomplete(interaction: AutocompleteInteraction) {
+        const focusedOption = interaction.options.getFocused(true);
+        let choices;
+        if (focusedOption.name === "timezone") {
+            choices = tzNames;
+        }
+        const filtered = choices.filter((choice) =>
+            choice.startsWith(focusedOption.value)
+        );
+
+        let options;
+        if (filtered.length > 25) {
+            options = filtered.slice(0, 25);
+        } else {
+            options = filtered;
+        }
+        await interaction.respond(
+            options.map((choice) => ({ name: choice, value: choice }))
+        );
+    },
+
     async execute(interaction: ChatInputCommandInteraction) {
         const guildId = interaction.guildId;
         const userId = interaction.user.id;
         const message = interaction.options.getString("message");
+        const timezone = interaction.options.getString("timezone") ?? "America/Toronto";
         const timeMult = interaction.options.getNumber("time_units") ?? 3600000;
         const time = interaction.options.getNumber("time") ?? 1;
         const year = interaction.options.getNumber("year") ?? new Date().getFullYear();
         const month = interaction.options.getNumber("month") ?? new Date().getMonth();
         const day = interaction.options.getNumber("day") ?? new Date().getDate();
-        const hour = interaction.options.getNumber("hour") ?? new Date().getHours() + 1;
+        const hour = interaction.options.getNumber("hour") ?? new Date().getHours();
         const minute = interaction.options.getNumber("minute") ?? 0;
         let channelInput = interaction.options.getChannel(
             "channel"
@@ -257,59 +289,61 @@ const RemindMe: Command = {
                 pubsub.publish("remindmetime", data);
                 break;
             case "date":
-                // check if date is valid
-                let now = new Date();
-                let date = new Date();
-                const yearIsNow = now.getFullYear() === year;
-                const monthIsNow = yearIsNow && now.getMonth() === month;
-                const dayIsNow = monthIsNow && now.getDate() === day;
-                const hourIsNow = dayIsNow && now.getHours() === hour;
-
                 try {
-                    try {
-                        date.setFullYear(year);
-                    } catch {
-                        // for some reason
+                    let now = new Date();
+                    // turn date into a moment in the specified timezone
+                    let date = moment({
+                        year: year,
+                        month: month,
+                        date: day,
+                        hour: hour,
+                        minute: minute,
+                        second: 0,
+                        millisecond: 0,
+                    }).tz(timezone);
+
+                    logger.debug("timezone date: " + date.format());
+
+                    // if the date is before now, give error
+                    if (date.isSameOrBefore(now)) {
                         sendErrorMessage(
                             interaction,
-                            "Error: The set year is not valid."
+                            "Error: The reminder date is in the past."
                         );
                         return;
                     }
-                    if (yearIsNow && now.getMonth() > month) {
-                        sendErrorMessage(
-                            interaction,
-                            "Error: The set month is in the past."
-                        );
-                        return;
-                    }
-                    date.setMonth(month);
-                    if (monthIsNow && now.getDate() > day) {
-                        sendErrorMessage(
-                            interaction,
-                            "Error: The set day is in the past."
-                        );
-                        return;
-                    }
-                    date.setDate(day);
-                    if (dayIsNow && now.getHours() > hour) {
-                        sendErrorMessage(
-                            interaction,
-                            "Error: The set hour is in the past."
-                        );
-                        return;
-                    }
-                    date.setHours(hour);
-                    if (hourIsNow && now.getMinutes() > minute) {
-                        sendErrorMessage(
-                            interaction,
-                            "Error: The set minute is in the past."
-                        );
-                        return;
-                    }
-                    date.setMinutes(minute);
-                    date.setSeconds(0);
-                    date.setMilliseconds(0);
+
+                    // create data and send
+                    data = {
+                        guildId,
+                        userId,
+                        channelId: channel.id,
+                        message,
+                        date,
+                        commandName: interaction.options.getSubcommand(),
+                    };
+                    page = {
+                        title: "Reminder Set",
+                        fields: [
+                            {
+                                name: "User",
+                                value: `<@${userId}>`,
+                            },
+                            {
+                                name: "Message",
+                                value: message,
+                            },
+                            {
+                                name: "Date",
+                                value: `${date.format("dddd, MMMM Do YYYY, h:mm:ss a")}`,
+                            },
+                            {
+                                name: "Channel",
+                                value: `<#${channel.id}>`,
+                            },
+                        ],
+                    };
+                    pubsub.publish("remindmedate", data);
                 } catch (err) {
                     sendErrorMessage(
                         interaction,
@@ -322,38 +356,6 @@ const RemindMe: Command = {
                     });
                     return;
                 }
-
-                // create data and send
-                data = {
-                    guildId,
-                    userId,
-                    channelId: channel.id,
-                    message,
-                    date,
-                    commandName: interaction.options.getSubcommand(),
-                };
-                page = {
-                    title: "Reminder Set",
-                    fields: [
-                        {
-                            name: "User",
-                            value: `<@${userId}>`,
-                        },
-                        {
-                            name: "Message",
-                            value: message,
-                        },
-                        {
-                            name: "Date",
-                            value: `${date.toLocaleString()}`,
-                        },
-                        {
-                            name: "Channel",
-                            value: `<#${channel.id}>`,
-                        },
-                    ],
-                };
-                pubsub.publish("remindmedate", data);
                 break;
             default:
                 sendErrorMessage(interaction, "idk what happened :( try again");

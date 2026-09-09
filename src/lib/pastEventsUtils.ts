@@ -25,8 +25,8 @@ import {
     ComponentType,
     RepliableInteraction,
 } from "discord.js";
-import { fetchPastEventsByGuild } from "./db/events";
-import logger from "../lib/logging";
+import { fetchPastEventsByGuild } from "./db/events.js";
+import logger from "../lib/logging.js";
 
 const backId = "back";
 const forwardId = "forward";

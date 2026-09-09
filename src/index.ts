@@ -37,11 +37,11 @@ import {
     User,
 } from "discord.js";
 import "dotenv/config";
-import CustomClient from "./CustomClient";
-import allCommands from "./commands";
+import CustomClient from "./CustomClient.js";
+import allCommands from "./commands/index.js";
 import pubsub from "pubsub-js";
-import { listPreviousEvents } from "./lib/pastEventsUtils";
-import { RemindMeDateData, RemindMeTimeData } from "./commands/definitions";
+import { listPreviousEvents } from "./lib/pastEventsUtils.js";
+import { RemindMeDateData, RemindMeTimeData } from "./commands/definitions.js";
 import {
     addNewEvent,
     fetchCurrentEventsByGuild,
@@ -51,15 +51,15 @@ import {
     updateSubscriberNum,
     updateSubscriberNumTotal,
     updateToPastEvent,
-} from "./lib/db/events";
+} from "./lib/db/events.js";
 import {
     addReminder,
     deleteReminder,
     fetchSoonestReminder,
     formatReminderDate,
     formatReminderTime,
-} from "./lib/db/reminders";
-import logger from "./lib/logging";
+} from "./lib/db/reminders.js";
+import logger from "./lib/logging.js";
 
 export interface eventsRolesInfo {
     // for lookup
@@ -543,63 +543,84 @@ client.once(Events.ClientReady, (readyClient) => {
 client.on(Events.InteractionCreate, async (interaction) => {
     const runInteraction = async () => {
         if (isReady) {
-            if (!interaction.isChatInputCommand()) {
-                return;
-            }
+            if (interaction.isChatInputCommand()) {
+                const command = (interaction.client as CustomClient).commands.get(
+                    interaction.commandName
+                );
+                if (!command) {
+                    logger.error(
+                        `No command matching ${interaction.commandName} was found.`,
+                        {
+                            event: "InteractionCreate",
+                            interactionId: interaction.id,
+                            command: interaction.commandName,
+                            guildId: interaction.guildId,
+                        }
+                    );
+                    return;
+                }
 
-            const command = (interaction.client as CustomClient).commands.get(
-                interaction.commandName
-            );
-            if (!command) {
-                logger.error(
-                    `No command matching ${interaction.commandName} was found.`,
-                    {
+                try {
+                    await command.execute(interaction);
+                } catch (err) {
+                    logger.error(err as string, {
                         event: "InteractionCreate",
                         interactionId: interaction.id,
                         command: interaction.commandName,
                         guildId: interaction.guildId,
+                    });
+                    if (interaction.replied || interaction.deferred) {
+                        await interaction
+                            .followUp({
+                                content:
+                                    "There was an error while executing this command!",
+                                ephemeral: true,
+                            })
+                            .catch((reason) =>
+                                logger.error(reason, {
+                                    event: "InteractionCreate",
+                                    interactionId: interaction.id,
+                                    command: interaction.commandName,
+                                    guildId: interaction.guildId,
+                                })
+                            );
+                    } else {
+                        await interaction
+                            .reply({
+                                content:
+                                    "There was an error while executing this command!",
+                                ephemeral: true,
+                            })
+                            .catch((reason) =>
+                                logger.error(reason, {
+                                    event: "InteractionCreate",
+                                    interactionId: interaction.id,
+                                    command: interaction.commandName,
+                                    guildId: interaction.guildId,
+                                })
+                            );
                     }
+                }
+            } else if (interaction.isAutocomplete()) {
+                const command = (interaction.client as CustomClient).commands.get(
+                    interaction.commandName
                 );
-                return;
-            }
-
-            try {
-                await command.execute(interaction);
-            } catch (err) {
-                logger.error(err as string, {
-                    event: "InteractionCreate",
-                    interactionId: interaction.id,
-                    command: interaction.commandName,
-                    guildId: interaction.guildId,
-                });
-                if (interaction.replied || interaction.deferred) {
-                    await interaction
-                        .followUp({
-                            content: "There was an error while executing this command!",
-                            ephemeral: true,
-                        })
-                        .catch((reason) =>
-                            logger.error(reason, {
-                                event: "InteractionCreate",
-                                interactionId: interaction.id,
-                                command: interaction.commandName,
-                                guildId: interaction.guildId,
-                            })
-                        );
-                } else {
-                    await interaction
-                        .reply({
-                            content: "There was an error while executing this command!",
-                            ephemeral: true,
-                        })
-                        .catch((reason) =>
-                            logger.error(reason, {
-                                event: "InteractionCreate",
-                                interactionId: interaction.id,
-                                command: interaction.commandName,
-                                guildId: interaction.guildId,
-                            })
-                        );
+                if (!command) {
+                    logger.error(
+                        `No autcomplete command matching ${interaction.commandName} was found.`,
+                        {
+                            event: "InteractionCreate",
+                            interactionId: interaction.id,
+                            command: interaction.commandName,
+                            guildId: interaction.guildId,
+                        }
+                    );
+                    return;
+                }
+                try {
+                    await command.autocomplete(interaction);
+                } catch (error) {
+                    console.error(error);
                 }
             }
         } else {

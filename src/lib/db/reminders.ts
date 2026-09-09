@@ -19,9 +19,9 @@
  */
 
 import sqlite3 from "sqlite3";
-import { get, runWithParams } from "../../scripts/sqlite/sqlite_lib";
-import { RemindMeDateData, RemindMeTimeData } from "../../commands/definitions";
-import logger from "../../lib/logging";
+import { get, runWithParams } from "../../scripts/sqlite/sqlite_lib.js";
+import { RemindMeDateData, RemindMeTimeData } from "../../commands/definitions.js";
+import logger from "../../lib/logging.js";
 
 export interface Reminder {
     id?: string;
@@ -53,13 +53,15 @@ export const formatReminderTime = (reminder: RemindMeTimeData): Reminder => {
 
 export const formatReminderDate = (reminder: RemindMeDateData): Reminder => {
     try {
-        const date = reminder.date.toISOString();
+        // convert to utc for storage
+        const formattedDate = reminder.date.utc().format();
+        logger.debug("utc date: " + formattedDate);
         return {
             guild_id: reminder.guildId,
             user_id: reminder.userId,
             channel_id: reminder.channelId,
             message: reminder.message,
-            date: date,
+            date: formattedDate,
         };
     } catch (err) {
         logger.error(err as string, {

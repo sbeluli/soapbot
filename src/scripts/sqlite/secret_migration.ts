@@ -21,11 +21,11 @@
 import sqlite3 from "sqlite3";
 import fs from "node:fs";
 import "dotenv/config";
-import { EventDetails } from "../..";
-import { runWithParams } from "./sqlite_lib";
+import { EventDetails } from "../../index.js";
+import { runWithParams } from "./sqlite_lib.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import logger from "../../lib/logging";
+import logger from "../../lib/logging.js";
 
 const fileNames = [
     process.env.SECRET_1 + ".json",

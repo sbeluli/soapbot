@@ -20,11 +20,11 @@
 
 import sqlite3 from "sqlite3";
 import fs from "node:fs";
-import { eventsRolesInfo } from "../..";
-import { runWithParams } from "./sqlite_lib";
+import { eventsRolesInfo } from "../../index.js";
+import { runWithParams } from "./sqlite_lib.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import logger from "../../lib/logging";
+import logger from "../../lib/logging.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

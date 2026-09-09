@@ -8,3 +8,4 @@ logs/
 **/secret-**.json
 **.db
 start_service.bash
+/.vscode

@@ -2,8 +2,8 @@
     "compilerOptions": {
         "lib": ["es6"],
         "target": "es6",
-        "module": "ESNext",
-        "moduleResolution": "node",
+        "module": "NodeNext",
+        "moduleResolution": "nodenext",
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "sourceMap": true,

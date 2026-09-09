@@ -19,7 +19,7 @@
  */
 
 import { RepliableInteraction, SlashCommandBuilder } from "discord.js";
-import { Command } from "../definitions";
+import { Command } from "../definitions.js";
 import pubsub from "pubsub-js";
 
 const PastEvents: Command = {

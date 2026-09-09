@@ -19,8 +19,8 @@
  */
 
 import sqlite3 from "sqlite3";
-import { execute } from "./sqlite_lib";
-import logger from "../../lib/logging";
+import { execute } from "./sqlite_lib.js";
+import logger from "../../lib/logging.js";
 
 const createDB = async () => {
     const db = new sqlite3.Database("soapbot.db");

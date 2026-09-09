@@ -2,7 +2,7 @@ import winston from "winston";
 import {
     AbstractConfigSetColors,
     AbstractConfigSetLevels,
-} from "winston/lib/winston/config";
+} from "winston/lib/winston/config/index.js";
 const { combine, timestamp, json, errors, colorize, align, printf } = winston.format;
 
 const myCustomLevels: {

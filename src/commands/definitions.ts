@@ -19,12 +19,14 @@
  */
 
 import {
+    AutocompleteInteraction,
     ChatInputCommandInteraction,
     RepliableInteraction,
     SlashCommandBuilder,
     SlashCommandOptionsOnlyBuilder,
     SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
+import { Moment } from "moment";
 
 export interface Command {
     data:
@@ -34,6 +36,7 @@ export interface Command {
     execute:
         | ((interaction: RepliableInteraction) => void)
         | ((interaction: ChatInputCommandInteraction) => void);
+    autocomplete?: (interaction: AutocompleteInteraction) => void;
 }
 
 export interface RemindMeTimeData {
@@ -50,6 +53,6 @@ export interface RemindMeDateData {
     userId: string;
     channelId: string;
     message: string;
-    date: Date;
+    date: Moment;
     commandName: string;
 }
