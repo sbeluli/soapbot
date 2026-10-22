@@ -22,6 +22,7 @@ import sqlite3 from "sqlite3";
 import { get, runWithParams } from "../../scripts/sqlite/sqlite_lib.js";
 import { RemindMeDateData, RemindMeTimeData } from "../../commands/definitions.js";
 import logger from "../../lib/logging.js";
+import moment from "moment";
 
 export interface Reminder {
     id?: string;
@@ -34,7 +35,7 @@ export interface Reminder {
 
 export const formatReminderTime = (reminder: RemindMeTimeData): Reminder => {
     try {
-        const date = new Date(Date.now() + reminder.time).toISOString();
+        const date = moment().add(moment.duration(reminder.time)).toISOString();
         return {
             guild_id: reminder.guildId,
             user_id: reminder.userId,
@@ -48,6 +49,7 @@ export const formatReminderTime = (reminder: RemindMeTimeData): Reminder => {
             userId: reminder.userId,
             guildId: reminder.guildId,
         });
+        return null;
     }
 };
 
@@ -72,39 +74,41 @@ export const formatReminderDate = (reminder: RemindMeDateData): Reminder => {
 };
 
 export const addReminder = async (reminder: Reminder) => {
-    const db = new sqlite3.Database("soapbot.db");
-    try {
-        await runWithParams(
-            db,
-            "INSERT INTO reminders (guild_id, user_id, channel_id, message, date) " +
-                `VALUES (?, ?, ?, ?, ?)`,
-            [
-                reminder.guild_id,
-                reminder.user_id,
-                reminder.channel_id,
-                reminder.message,
-                reminder.date,
-            ]
-        );
-    } catch (error) {
-        logger.dbError(error as string, {
-            event: "addReminder",
-            guildId: reminder.guild_id,
-            userId: reminder.user_id,
-            channelId: reminder.channel_id,
-            reminder: reminder.message,
-            date: reminder.date,
-        });
-    } finally {
-        logger.dbInfo("successfully added new reminder.", {
-            event: "addReminder",
-            guildId: reminder.guild_id,
-            userId: reminder.user_id,
-            channelId: reminder.channel_id,
-            reminder: reminder.message,
-            date: reminder.date,
-        });
-        db.close();
+    if (reminder) {
+        const db = new sqlite3.Database("soapbot.db");
+        try {
+            await runWithParams(
+                db,
+                "INSERT INTO reminders (guild_id, user_id, channel_id, message, date) " +
+                    `VALUES (?, ?, ?, ?, ?)`,
+                [
+                    reminder.guild_id,
+                    reminder.user_id,
+                    reminder.channel_id,
+                    reminder.message,
+                    reminder.date,
+                ]
+            );
+        } catch (error) {
+            logger.dbError(error as string, {
+                event: "addReminder",
+                guildId: reminder.guild_id,
+                userId: reminder.user_id,
+                channelId: reminder.channel_id,
+                reminder: reminder.message,
+                date: reminder.date,
+            });
+        } finally {
+            logger.dbInfo("successfully added new reminder.", {
+                event: "addReminder",
+                guildId: reminder.guild_id,
+                userId: reminder.user_id,
+                channelId: reminder.channel_id,
+                reminder: reminder.message,
+                date: reminder.date,
+            });
+            db.close();
+        }
     }
 };
 

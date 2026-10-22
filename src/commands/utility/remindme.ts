@@ -94,6 +94,7 @@ const RemindMe: Command = {
                             "How far in the future you want to be reminded, in time_units. Default: 1"
                         )
                         .setMinValue(0)
+                        .setMaxValue(999999999)
                 )
                 .addChannelOption((option) =>
                     option
@@ -258,37 +259,51 @@ const RemindMe: Command = {
 
         switch (interaction.options.getSubcommand()) {
             case "time":
-                data = {
-                    guildId,
-                    userId,
-                    channelId: channel.id,
-                    message,
-                    time: time * timeMult,
-                    commandName: interaction.options.getSubcommand(),
-                };
+                try {
+                    data = {
+                        guildId,
+                        userId,
+                        channelId: channel.id,
+                        message,
+                        time: time * timeMult,
+                        commandName: interaction.options.getSubcommand(),
+                    };
 
-                page = {
-                    title: "Reminder Set",
-                    fields: [
-                        {
-                            name: "User",
-                            value: `<@${userId}>`,
-                        },
-                        {
-                            name: "Message",
-                            value: message,
-                        },
-                        {
-                            name: "Time",
-                            value: `${time} ${numToString.get(timeMult)}`,
-                        },
-                        {
-                            name: "Channel",
-                            value: `<#${channel.id}>`,
-                        },
-                    ],
-                };
-                pubsub.publish("remindmetime", data);
+                    page = {
+                        title: "Reminder Set",
+                        fields: [
+                            {
+                                name: "User",
+                                value: `<@${userId}>`,
+                            },
+                            {
+                                name: "Message",
+                                value: message,
+                            },
+                            {
+                                name: "Time",
+                                value: `${time} ${numToString.get(timeMult)}`,
+                            },
+                            {
+                                name: "Channel",
+                                value: `<#${channel.id}>`,
+                            },
+                        ],
+                    };
+                    pubsub.publish("remindmetime", data);
+                } catch (err) {
+                    sendErrorMessage(
+                        interaction,
+                        "There was a problem setting the time. Please contact the developer."
+                    );
+                    logger.error(err as string, {
+                        event: "remindMe time",
+                        userId: userId,
+                        guildId: guildId,
+                        data: data,
+                    });
+                    return;
+                }
                 break;
             case "date":
                 try {
@@ -353,6 +368,7 @@ const RemindMe: Command = {
                         event: "remindMe date",
                         userId: userId,
                         guildId: guildId,
+                        data: data,
                     });
                     return;
                 }
