@@ -292,7 +292,7 @@ const RemindMe: Command = {
                 break;
             case "date":
                 try {
-                    let now = new Date();
+                    let now = moment.tz(Date.now(), timezone);
                     // turn date into a moment in the specified timezone
                     let date = moment({
                         year: year,
