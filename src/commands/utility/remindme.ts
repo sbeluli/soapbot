@@ -94,7 +94,6 @@ const RemindMe: Command = {
                             "How far in the future you want to be reminded, in time_units. Default: 1"
                         )
                         .setMinValue(0)
-                        .setMaxValue(999999999)
                 )
                 .addChannelOption((option) =>
                     option
@@ -260,6 +259,15 @@ const RemindMe: Command = {
         switch (interaction.options.getSubcommand()) {
             case "time":
                 try {
+                    // error checking for time because unix 2038 problem ig idk
+                    if (Number.isNaN(new Date(Date.now() + time * timeMult).getTime())) {
+                        await sendErrorMessage(
+                            interaction,
+                            "That duration is too large to schedule. Please choose a shorter duration."
+                        );
+                        return;
+                    }
+
                     data = {
                         guildId,
                         userId,
