@@ -317,7 +317,7 @@ const RemindMe: Command = {
                 try {
                     let now = moment.tz(Date.now(), timezone);
                     // turn date into a moment in the specified timezone
-                    let date = moment({
+                    let date = moment.tz({
                         year: year,
                         month: month,
                         date: day,
@@ -325,7 +325,7 @@ const RemindMe: Command = {
                         minute: minute,
                         second: 0,
                         millisecond: 0,
-                    }).tz(timezone);
+                    }, timezone);
 
                     // if the date is before now, give error
                     if (date.isSameOrBefore(now)) {
