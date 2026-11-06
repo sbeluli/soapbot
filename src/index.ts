@@ -633,8 +633,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 client.on(
     Events.MessageReactionAdd,
     (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) => {
-        logger.debug("message reaction", { event: "MessageReactionAdd" });
         if (reaction.message.author.id === client.user.id) {
+            logger.debug("message reaction", { event: "MessageReactionAdd" });
             const text = reaction.message.content;
             const isOriginalAuthor = text.includes(`**Reminder** for <@${user.id}>:`);
 
