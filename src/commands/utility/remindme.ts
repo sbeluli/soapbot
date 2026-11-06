@@ -206,7 +206,7 @@ const RemindMe: Command = {
             choices = tzNames;
         }
         const filtered = choices.filter((choice) =>
-            choice.startsWith(focusedOption.value)
+            choice.toLowerCase().startsWith(focusedOption.value.toLowerCase())
         );
 
         let options;
@@ -221,22 +221,30 @@ const RemindMe: Command = {
     },
 
     async execute(interaction: ChatInputCommandInteraction) {
+        // shared vars
         const guildId = interaction.guildId;
         const userId = interaction.user.id;
         const message = interaction.options.getString("message");
-        const timezone = interaction.options.getString("timezone") ?? "America/Toronto";
-        const timeMult = interaction.options.getNumber("time_units") ?? 3600000;
-        const time = interaction.options.getNumber("time") ?? 1;
-        const year = interaction.options.getNumber("year") ?? new Date().getFullYear();
-        const month = interaction.options.getNumber("month") ?? new Date().getMonth();
-        const day = interaction.options.getNumber("day") ?? new Date().getDate();
-        const hour = interaction.options.getNumber("hour") ?? new Date().getHours();
-        const minute = interaction.options.getNumber("minute") ?? 0;
         let channelInput = interaction.options.getChannel(
             "channel"
         ) as GuildTextBasedChannel;
         const channel = channelInput ?? interaction.channel;
         const ephemeral = interaction.options.getBoolean("ephemeral") ?? true;
+
+        // time
+        const timeMult = interaction.options.getNumber("time_units") ?? 3600000;
+        const time = interaction.options.getNumber("time") ?? 1;
+
+        // date
+        const timezone = interaction.options.getString("timezone") ?? "America/Toronto";
+        const now = moment.tz(Date.now(), timezone);
+        const year = interaction.options.getNumber("year") ?? now.year();
+        const month = interaction.options.getNumber("month") ?? now.month();
+        const day = interaction.options.getNumber("day") ?? now.date();
+        const hour = interaction.options.getNumber("hour") ?? now.hour();
+        const minute = interaction.options.getNumber("minute") ?? 0;
+
+        // send data
         let data: RemindMeTimeData | RemindMeDateData;
         let page: APIEmbed;
 
@@ -315,17 +323,19 @@ const RemindMe: Command = {
                 break;
             case "date":
                 try {
-                    let now = moment.tz(Date.now(), timezone);
                     // turn date into a moment in the specified timezone
-                    let date = moment.tz({
-                        year: year,
-                        month: month,
-                        date: day,
-                        hour: hour,
-                        minute: minute,
-                        second: 0,
-                        millisecond: 0,
-                    }, timezone);
+                    let date = moment.tz(
+                        {
+                            year: year,
+                            month: month,
+                            date: day,
+                            hour: hour,
+                            minute: minute,
+                            second: 0,
+                            millisecond: 0,
+                        },
+                        timezone
+                    );
 
                     // if the date is before now, give error
                     if (date.isSameOrBefore(now)) {
